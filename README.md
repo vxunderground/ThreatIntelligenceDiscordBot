@@ -20,7 +20,7 @@ The vx-underground Threat Intelligence Discord Bot gets updates from various cle
 * By default this script requires 4 discord web hooks. It pipes output for private sector updates, governments updates, ransomware group updates, and log output to indicate whether or not it is running. Feel free to remove whatever, or add whatever
 * Some Rss Feeds (such as Cybersecurity AT&T) have non-default RSS field keys. Some may require debugging to determine which fields are labeled as such. We simply removed these domains from the configuration file. We were too lazy to resolve this.
 * There is no way to ensure what images are being posted to the Telegram channels. Proceed with caution
-* This bot does not download attachments from Telegram channels. There is no way to determine what it is (reliably).
+* This bot does not download file attachments (i.e. binaries, zip files, etc.) from Telegram channels. There is no way to determine what it is (reliably).
 
 
 # Adding or removing RSS Feeds to monitor
