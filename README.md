@@ -16,6 +16,14 @@ Step 4. Run the script
 # Adding or removing things to monitor
 Step 1. All monitored RSS feeds are in the RssFeedList object. To add a new RSS feed simply append a new entry and assign it a config.txt file entry name. e.g.
 
+In the Python script:
 ```
-["https://redcanary.com/feed/", "RedCanary"]
+    RssFeedList = [["https://grahamcluley.com/feed/", "Graham Cluley"],
+                   ["https://1337WebsiteIWannaFollow.com/feed/", "1337Website"]]
 ```
+
+In the config file:
+```
+1337Website = ?
+```
+The "?" indicates it has never received an update.
