@@ -13,6 +13,10 @@ The vx-underground Threat Intelligence Discord Bot gets updates from various cle
 * Step 3. Have internet connection
 * Step 4. Run the script
 
+# Other notes
+* By default this script requires 4 discord web hooks. It pipes output for private sector updates, governments updates, ransomware group updates, and log output to indicate whether or not it is running. Feel free to remove whatever, or add whatever
+* Some Rss Feeds (such as Cybersecurity AT&T) have non-default RSS field keys. Some may require debugging to determine which fields are labeled as such. We simply removed these domains from the configuration file. We were too lazy to resolve this.
+
 # Adding or removing things to monitor
 All monitored RSS feeds are in the RssFeedList object. To add a new RSS feed simply append a new entry and assign it a config.txt file entry name. e.g.
 
