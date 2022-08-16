@@ -1,5 +1,5 @@
 # Threat Intelligence Discord Bot
-The vx-underground Threat Intelligence Discord Bot gets updates from various clearnet domains, ransomware threat actor domains, and Telegram channels. This bot will check for updates in intervals of 1800 seconds (omit Telegram bot).
+The vx-underground Threat Intelligence Discord Bot gets updates from various clearnet domains, ransomware threat actor domains, and Telegram channels. This bot will check for updates in intervals of 1800 seconds (omit Telegram bot, this is gotten in real time).
 
 * Written in Python 3.10 64bit
 * Can run on Windows or Linux
@@ -17,7 +17,7 @@ The vx-underground Threat Intelligence Discord Bot gets updates from various cle
 * Step 4. Run the script
 
 # Other notes
-* By default this script requires 4 discord web hooks. It pipes output for private sector updates, governments updates, ransomware group updates, and log output to indicate whether or not it is running. Feel free to remove whatever, or add whatever
+* By default this script requires 4 discord web hooks (5 in total if you decide to use the Telegram bot). It pipes output for private sector updates, governments updates, ransomware group updates, and log output to indicate whether or not it is running. Feel free to remove whatever, or add whatever
 * Some Rss Feeds (such as Cybersecurity AT&T) have non-default RSS field keys. Some may require debugging to determine which fields are labeled as such. We simply removed these domains from the configuration file. We were too lazy to resolve this.
 * There is no way to ensure what images are being posted to the Telegram channels. Proceed with caution
 * This bot does not download file attachments (i.e. binaries, zip files, etc.) from Telegram channels. There is no way to determine what it is (reliably).
