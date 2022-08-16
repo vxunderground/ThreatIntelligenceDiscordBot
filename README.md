@@ -41,3 +41,25 @@ The "?" indicates it has never received an update.
 # Adding or removing Telegram channels to monitor
 
 * NOTE: The Telegram API is an ugly monster and does not make determining what is being filtered an easy task. This script contains A LOT of repetitive code. Perhaps clean it up and send a merge request? =D
+* Step 1. Set the image download path in the python script && set the Discord web hook URL
+* Step 2. Retrieve the Telegram channel entity via 
+```
+NewTelegramChannelName = TelegramClientObject.get_entity("https://t.me/TelegramChannelLink")
+```
+* Step 3. Send a join request when the application launches via 
+```
+TelegramClientObject(JoinChannelRequest(NewTelegramChannelName))
+```
+* Step 4. Set the Telegram async filter via
+```
+##****NewTelegramChannelName handler****
+@TelegramClientObject.on(events.NewMessage(incoming=True,chats=NewTelegramChannelName))
+async def EventHandler(EventObject):
+
+    if EventObject.photo:
+        ImageData = await EventObject.download_media(DownloadPath)
+        UploadFile = discord.File(open(ImageData, 'rb'))
+        TelegramFeed.send(file=UploadFile)
+        
+    CreateTelegramMessageOutput("NewTelegramChannelName", EventObject.message.message)
+```
