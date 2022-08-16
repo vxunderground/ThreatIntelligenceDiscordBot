@@ -4,3 +4,5 @@ The vx-underground Threat Intelligence Discord Bot gets updates from various cle
 * Written in Python 3.10 64bit
 * Can run on Windows or Linux
 * Requires Discord Webhook
+* Easily add or remove domains wanting to be monitored
+* Written by a C++ Windows programmer, variable and function naming convention will probably make you puke
