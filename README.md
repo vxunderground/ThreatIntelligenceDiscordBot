@@ -63,3 +63,6 @@ async def EventHandler(EventObject):
         
     CreateTelegramMessageOutput("NewTelegramChannelName", EventObject.message.message)
 ```
+
+# Credit
+This was made by smelly__vx over a slow and boring weekend. We hope it provides some value to your channel and/or organization.
