@@ -6,3 +6,5 @@ The vx-underground Threat Intelligence Discord Bot gets updates from various cle
 * Requires Discord Webhook
 * Easily add or remove domains wanting to be monitored
 * Written by a C++ Windows programmer, variable and function naming convention will probably make you puke
+
+Not sure how to make a webhook? [Discord makes it easy!](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
