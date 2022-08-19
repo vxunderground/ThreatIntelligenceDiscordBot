@@ -16,6 +16,18 @@ The vx-underground Threat Intelligence Discord Bot gets updates from various cle
 * Step 3a. If you're running the Telegram channel monitor, please note it downloads images from the Telegram channel. Sufficient hard disk space will be required to store images
 * Step 4. Run the script
 
+# Known issues
+* We did not generate a requirements.txt file, sorry. This will be addressed at a later period in time
+* Known issues occur when attempting to import RequestsWebhookAdapter from Discord, users noted a fix by doing either
+```
+python3 -m pip install --force-reinstall "discord.py<=1.0.0"
+
+OR
+
+pip install -Iv discord.py==1.7.3
+```
+
+
 # Other notes
 * By default this script requires 4 discord web hooks (5 in total if you decide to use the Telegram bot). It pipes output for private sector updates, governments updates, ransomware group updates, and log output to indicate whether or not it is running. Feel free to remove whatever, or add whatever
 * ~~Some Rss Feeds (such as Cybersecurity AT&T) have non-default RSS field keys. Some may require debugging to determine which fields are labeled as such. We simply removed these domains from the configuration file. We were too lazy to resolve this.~~
