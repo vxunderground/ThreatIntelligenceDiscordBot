@@ -153,10 +153,6 @@ def EntryMain():
         FnCreateLogStringAndWriteToDiscord("Ransomware TA List")
 
         time.sleep(1800)
-    
-    
-
-    #["https://cybersecurity.att.com/site/blog-all-rss", "ATT"]] <--- needs custom code
                       
     
 EntryMain()
