@@ -10,14 +10,13 @@ The vx-underground Threat Intelligence Discord Bot gets updates from various cle
 
 # Getting Started
 * Step 1. Make a web hook. Not sure how to make a webhook? [Discord makes it easy!](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
-* Step 2. Create the config.txt file. This config.txt stores when data was recently updated. If a value has a "?" this means it has never received an update and/or is a new entry. The configuration file path is specified at the beginning of the python script.
+* Step 2. Create the Config.txt file. This Config.txt stores when data was recently updated. If a value has a "?" this means it has never received an update and/or is a new entry. By default the file is expected in the same path as the scripts. Change configuration_file_path in DiscordIntelBot.py if you'd like to keep it somewhere else.
 * Step 2a. If you'd like to monitor Telegram channels, you will need a [Telegram API Key](https://core.telegram.org/api/obtaining_api_id)
 * Step 3. Have internet connection
-* Step 3a. If you're running the Telegram channel monitor, please note it downloads images from the Telegram channel. Sufficient hard disk space will be required to store images
-* Step 4. Run the script
+* Step 3a. If you're running the Telegram channel monitor, please note it downloads images from the Telegram channel. Sufficient hard disk space will be required to store images. By default downloaded images are stored in the TelegramImages subfolder. Change download_path in TelegramIntelBot.py if you'd like to store them somewhere else.
+* Step 4. Run the scripts. They'll run indefinitely, so feel free to run them as services, but not as scheduled tasks.
 
 # Known issues
-* We did not generate a requirements.txt file, sorry. This will be addressed at a later period in time
 * Known issues occur when attempting to import RequestsWebhookAdapter from Discord, users noted a fix by doing either
 ```
 python3 -m pip install --force-reinstall "discord.py<=1.0.0"
@@ -37,12 +36,12 @@ pip install -Iv discord.py==1.7.3
 * This bot will not send re-join requests on each run. When the script runs a session file is created in the directory it is operating out of. This will save its current state within the specified Telegram channels
 
 # Adding or removing RSS Feeds to monitor
-All monitored RSS feeds are in the RssFeedList object. To add a new RSS feed simply append a new entry and assign it a config.txt file entry name. e.g.
+All monitored RSS feeds are in the rss_feed_list object. To add a new RSS feed simply append a new entry and assign it a Config.txt file entry name. e.g.
 
 In the Python script:
 ```
-    RssFeedList = [["https://grahamcluley.com/feed/", "Graham Cluley"],
-                   ["https://1337WebsiteIWannaFollow.com/feed/", "1337Website"]]
+    rss_feed_list = [["https://grahamcluley.com/feed/", "Graham Cluley"],
+                     ["https://1337WebsiteIWannaFollow.com/feed/", "1337Website"]]
 ```
 
 In the config file:
@@ -52,18 +51,16 @@ In the config file:
 The "?" indicates it has never received an update.
 
 # Adding or removing Telegram channels to monitor
-
 * NOTE: The Telegram API is an ugly monster and does not make determining what is being filtered an easy task. This script contains A LOT of repetitive code. Perhaps clean it up and send a merge request? =D
-* Step 1. Set the image download path in the python script && set the Discord web hook URL
-* Step 2. Retrieve the Telegram channel entity via 
+* Step 1. Retrieve the Telegram channel entity via 
 ```
 NewTelegramChannelName = TelegramClientObject.get_entity("https://t.me/TelegramChannelLink")
 ```
-* Step 3. Send a join request when the application launches via 
+* Step 2. Send a join request when the application launches via 
 ```
 TelegramClientObject(JoinChannelRequest(NewTelegramChannelName))
 ```
-* Step 4. Set the Telegram async filter via
+* Step 3. Set the Telegram async filter via
 ```
 ##****NewTelegramChannelName handler****
 @TelegramClientObject.on(events.NewMessage(incoming=True,chats=NewTelegramChannelName))
