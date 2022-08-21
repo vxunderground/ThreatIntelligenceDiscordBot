@@ -5,7 +5,8 @@ The vx-underground Threat Intelligence Discord Bot gets updates from various cle
 * Can run on Windows or Linux
 * Requires Discord Webhook
 * Easily add or remove domains wanting to be monitored
-* Written by a C++ Windows programmer, variable and function naming convention will probably make you puke
+* ~~Written by a C++ Windows programmer, variable and function naming convention will probably make you puke~~
+    - Refactored by hRun, code is less ugly to Python programmers
 * 2 Scripts are present, 1 is responsible for ransomware groups and clearnet domains. The other is responsible for handling Telegram channels.
 
 # Getting Started
