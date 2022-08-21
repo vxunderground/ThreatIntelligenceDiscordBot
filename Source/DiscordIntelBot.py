@@ -25,7 +25,17 @@ def FnGetRansomwareUpdates():
         for Entries in Data:
 
             DateActivity = Entries["discovered"]
-            TmpObject = FileConfig.get('main', Entries["group_name"])
+
+            ###
+            # No Need to create an entry in Config.txt 
+            # by @JMousqueton               
+            try:
+                TmpObject = FileConfig.get('main', Entries["group_name"])
+            except:
+                FileConfig.set('main', Entries["group_name"], " = ?")
+                TmpObject = FileConfig.get('main', Entries["group_name"])
+           ###
+
 
             if "?" in TmpObject:
                 FileConfig.set('main', Entries["group_name"], DateActivity)
@@ -58,11 +68,21 @@ def FnGetRssFromUrl(RssItem, HookChannelDesciptor):
 
     for RssObject in NewsFeed.entries:
 
-         try:
+        try:
             DateActivity = time.strftime('%Y-%m-%dT%H:%M:%S', RssObject.published_parsed)
         except: 
             DateActivity = time.strftime('%Y-%m-%dT%H:%M:%S', RssObject.updated_parsed)
-        TmpObject = FileConfig.get('main', RssItem[1])
+
+        ###
+        #  No Need to create an entry in Config.txt 
+        # by @JMousqueton               
+        try:
+            TmpObject = FileConfig.get('main', RssItem[1])
+        except:
+            FileConfig.set('main', RssItem[1], " = ?")
+            TmpObject = FileConfig.get('main', RssItem[1])    
+        ### 
+        
         if "?" in TmpObject:
             IsInitialRun = True
             FileConfig.set('main', RssItem[1], DateActivity)
