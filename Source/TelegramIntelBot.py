@@ -1,9 +1,11 @@
+import os
 import time
 from discord import Webhook, RequestsWebhookAdapter
 from telethon import TelegramClient, events, sync
 from telethon.tl.functions.channels import JoinChannelRequest
 
-DownloadPath = "/home/pi/Telegram/Images/" ##file save path goes here
+# downloads to the TelegramImages directory by default, replace if desired otherwise
+DownloadPath = os.path.join(os.path.split(os.path.abspath(__file__))[0], '..', 'TelegramImages')
 TelegramClientObject = TelegramClient("BotName", "API-ID", "API-KEY") ##telegram api stuff goes here
 TelegramClientObject.start()
 
@@ -436,13 +438,11 @@ async def EventHandler(EventObject):
         
     CreateTelegramMessageOutput("HeawsNet", EventObject.message.message)
 
+
 ##****Telegram string builder****
 def CreateTelegramMessageOutput(GroupString, MessageBuffer):
-    OutputString = GroupString + " " + time.ctime() + " "
-    OutputString += MessageBuffer
-    TelegramFeed.send(OutputString)
+    telegram_feed.send(f'{group} {time.ctime()} {message}')
     
-def EntryMain():
-    TelegramClientObject.run_until_disconnected()
-    
-EntryMain()
+
+if __name__ == '__main__':
+    telegram_client.run_until_disconnected()

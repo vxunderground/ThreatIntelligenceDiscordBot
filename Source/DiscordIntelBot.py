@@ -1,30 +1,98 @@
 import feedparser
-import time
-from configparser import ConfigParser
+import json
+import os
 import requests
+import time
+from configparser import ConfigParser, NoOptionError
 from discord import Webhook, RequestsWebhookAdapter
-import urllib.request, json
 
-ConfigurationFilePath = "C:\\Users\\User\\Documents\\config.txt" ##path to configuration file
+# expects the configuration file in the same directory as this script by default, replace if desired otherwise
+configuration_file_path = os.path.join(os.path.split(os.path.abspath(__file__))[0], 'Config.txt')
+
+# put the discord hook urls to the channels you want to receive feeds in here
+private_sector_feed = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
+government_feed = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
+ransomware_feed = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
+# this one is logging of moniotring status only
+status_messages = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
+
+rss_feed_list = [
+    ['https://grahamcluley.com/feed/', 'Graham Cluley'],
+    ['https://threatpost.com/feed/', 'Threatpost'],
+    ['https://krebsonsecurity.com/feed/', 'Krebs on Security'],
+    ['https://www.darkreading.com/rss.xml', 'Dark Reading'],
+    ['http://feeds.feedburner.com/eset/blog', 'We Live Security'],
+    ['https://davinciforensics.co.za/cybersecurity/feed/', 'DaVinci Forensics'],
+    ['https://blogs.cisco.com/security/feed', 'Cisco'],
+    ['https://www.infosecurity-magazine.com/rss/news/', 'Information Security Magazine'],
+    ['http://feeds.feedburner.com/GoogleOnlineSecurityBlog', 'Google'],
+    ['http://feeds.trendmicro.com/TrendMicroResearch', 'Trend Micro'],
+    ['https://www.bleepingcomputer.com/feed/', 'Bleeping Computer'],
+    ['https://www.proofpoint.com/us/rss.xml', 'Proof Point'],
+    ['http://feeds.feedburner.com/TheHackersNews?format=xml', 'Hacker News'],
+    ['https://www.schneier.com/feed/atom/', 'Schneier on Security'],
+    ['https://www.binarydefense.com/feed/', 'Binary Defense'],
+    ['https://securelist.com/feed/', 'Securelist'],
+    ['https://research.checkpoint.com/feed/', 'Checkpoint Research'],
+    ['https://www.virusbulletin.com/rss', 'VirusBulletin'],
+    ['https://modexp.wordpress.com/feed/', 'Modexp'],
+    ['https://www.tiraniddo.dev/feeds/posts/default', 'James Forshaw'],
+    ['https://blog.xpnsec.com/rss.xml', 'Adam Chester'],
+    ['https://msrc-blog.microsoft.com/feed/', 'Microsoft Security'],
+    ['https://www.recordedfuture.com/feed', 'Recorded Future'],
+    ['https://www.sentinelone.com/feed/', 'SentinelOne'],
+    ['https://redcanary.com/feed/', 'RedCanary'],
+    ['https://cybersecurity.att.com/site/blog-all-rss', 'ATT']
+]
+
+gov_rss_feed_list = [
+    ['https://www.cisa.gov/uscert/ncas/alerts.xml', 'US-CERT CISA'],
+    ['https://www.ncsc.gov.uk/api/1/services/v1/report-rss-feed.xml', 'NCSC'],
+    ['https://www.cisecurity.org/feed/advisories', 'Center of Internet Security']
+]
+
+config_file = ConfigParser()
+config_file.read(configuration_file_path)
 
 
-FileConfig = ConfigParser()
-FileConfig.read(ConfigurationFilePath)
+def get_ransomware_updates():
+    r = requests.get('https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json')
 
-PrivateSectorFeed = Webhook.from_url("https://discord.com/api/webhooks/000/000", adapter=RequestsWebhookAdapter()) ##private sector discord hook goes here
-GovernmentFeed = Webhook.from_url("https://discord.com/api/webhooks/000/000", adapter=RequestsWebhookAdapter()) ##gov feed discord hook goes here
-RansomwareFeed = Webhook.from_url("https://discord.com/api/webhooks/000/000", adapter=RequestsWebhookAdapter()) ##ransomware feed discord hook goes here
-LogOutput = Webhook.from_url("https://discord.com/api/webhooks/000/000", adapter=RequestsWebhookAdapter()) ##logging channel discord hook goes here
+    for entries in r.json():
+        date_activity = entries['discovered']
+        try:
+            config_entry = config_file.get('main', entries['group_name'])
+        # TODO this treats entities on github but not in the config as errors, might just want to add them to the config?!
+        except NoOptionError:
+            continue
 
-def FnGetRansomwareUpdates():
-    
-    OutputString = ""
+        if config_entry.endswith('?'):
+            config_file.set('main', entries['group_name'], date_activity)
 
-    with urllib.request.urlopen("https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json") as RansomwareUrl:
-        Data = json.loads(RansomwareUrl.read().decode())
-        for Entries in Data:
+        if(config_entry >= date_activity): # TODO this works but is probably not the best way to handle datetimes
+            continue
+        else:
+            config_file.set('main', entries['group_name'], entries['discovered'])
+        
+        message = f'{entries["group_name"]}\n{entries["discovered"]}\n{entries["post_title"]}'
+        ransomware_feed.send(message)
+        time.sleep(3)
 
-            DateActivity = Entries["discovered"]
+        config_file.set('main', entries['group_name'], entries['discovered'])
+
+    with open(configuration_file_path, 'w') as f:
+        config_file.write(f)
+
+
+def get_rss_from_url(rss_item, hook_channel_descriptor):
+    news_feed = feedparser.parse(rss_item[0])
+    date_activity = None
+
+    for rss_object in news_feed.entries:
+        try:
+            date_activity = time.strftime('%Y-%m-%dT%H:%M:%S', rss_object.published_parsed)
+        except: 
+            date_activity = time.strftime('%Y-%m-%dT%H:%M:%S', rss_object.updated_parsed)
 
             ###
             # No Need to create an entry in Config.txt 
@@ -34,35 +102,25 @@ def FnGetRansomwareUpdates():
             except:
                 FileConfig.set('main', Entries["group_name"], " = ?")
                 TmpObject = FileConfig.get('main', Entries["group_name"])
-           ###
 
+        config_entry = config_file.get('main', rss_item[1])
 
-            if "?" in TmpObject:
-                FileConfig.set('main', Entries["group_name"], DateActivity)
-
-            if(TmpObject >= DateActivity):
+        if config_entry.endswith('?'):
+            config_file.set('main', rss_item[1], date_activity)
+        else:
+            if(config_entry >= date_activity):
                 continue
             else:
-                FileConfig.set('main', Entries["group_name"], Entries["discovered"])
-            
-            OutputMessage = Entries["group_name"]
-            OutputMessage += "\n"
-            OutputMessage += Entries["discovered"]
-            OutputMessage += "\n"
-            OutputMessage += Entries["post_title"]
+                config_file.set('main', rss_item[1], date_activity)
 
-            RansomwareFeed.send(OutputMessage)
-            time.sleep(3)
+        message = f'{rss_item[1]}\nDate: {date_activity}\nTitle: {rss_object.title}\nRead more: {rss_object.link}\n'
 
-            FileConfig.set('main', Entries["group_name"], Entries["discovered"])
-
-    with open(ConfigurationFilePath, 'w') as FileHandle:
-        FileConfig.write(FileHandle)
-
-def FnGetRssFromUrl(RssItem, HookChannelDesciptor):
-    NewsFeed = feedparser.parse(RssItem[0])
-    DateActivity = ""
-    IsInitialRun = False
+        if hook_channel_descriptor == 1:
+            private_sector_feed.send(message)
+        elif hook_channel_descriptor == 2:
+            government_feed.send(message)
+        else:
+            pass
 
     LastSaved = FileConfig.get('main', RssItem[1])
 
@@ -75,7 +133,7 @@ def FnGetRssFromUrl(RssItem, HookChannelDesciptor):
 
         ###
         #  No Need to create an entry in Config.txt 
-        # by @JMousqueton               
+        #  by @JMousqueton               
         try:
             TmpObject = FileConfig.get('main', RssItem[1])
         except:
@@ -107,75 +165,29 @@ def FnGetRssFromUrl(RssItem, HookChannelDesciptor):
 
         if HookChannelDesciptor == 2:
             GovernmentFeed.send(OutputMessage)
-            
+           
         time.sleep(3)
 
-    with open(ConfigurationFilePath, 'w') as FileHandle:
-        FileConfig.write(FileHandle)
+    with open(configuration_file_path, 'w') as f:
+        config_file.write(f)
 
-    IsInitialRun = False
 
-def FnCreateLogStringAndWriteToDiscord(RssItem):
-    LogString = "[*]" + time.ctime()
-    LogString += " " + "checked " + RssItem
-    LogOutput.send(LogString)
+def write_status_messages_to_discord(rss_item):
+    status_messages.send(f'[*]{time.ctime()} checked {rss_item}')
     time.sleep(2) 
-    
 
-def EntryMain():
 
-    LogString = ""
-    RssFeedList = [["https://grahamcluley.com/feed/", "Graham Cluley"],
-                   ["https://threatpost.com/feed/", "Threatpost"],
-                   ["https://krebsonsecurity.com/feed/", "Krebs on Security"],
-                   ["https://www.darkreading.com/rss.xml", "Dark Reading"],
-                   ["http://feeds.feedburner.com/eset/blog", "We Live Security"],
-                   ["https://davinciforensics.co.za/cybersecurity/feed/", "DaVinci Forensics"],
-                   ["https://blogs.cisco.com/security/feed", "Cisco"],
-                   ["https://www.infosecurity-magazine.com/rss/news/", "Information Security Magazine"],
-                   ["http://feeds.feedburner.com/GoogleOnlineSecurityBlog", "Google"],
-                   ["http://feeds.trendmicro.com/TrendMicroResearch", "Trend Micro"],
-                   ["https://www.bleepingcomputer.com/feed/", "Bleeping Computer"],
-                   ["https://www.proofpoint.com/us/rss.xml", "Proof Point"],
-                   ["http://feeds.feedburner.com/TheHackersNews?format=xml", "Hacker News"],
-                   ["https://www.schneier.com/feed/atom/", "Schneier on Security"],
-                   ["https://www.binarydefense.com/feed/", "Binary Defense"],
-                   ["https://securelist.com/feed/", "Securelist"],
-                   ["https://research.checkpoint.com/feed/", "Checkpoint Research"],
-                   ["https://www.virusbulletin.com/rss", "VirusBulletin"],
-                   ["https://modexp.wordpress.com/feed/", "Modexp"],
-                   ["https://www.tiraniddo.dev/feeds/posts/default", "James Forshaw"],
-                   ["https://blog.xpnsec.com/rss.xml", "Adam Chester"],
-                   ["https://msrc-blog.microsoft.com/feed/", "Microsoft Security"],
-                   ["https://www.recordedfuture.com/feed", "Recorded Future"],
-                   ["https://www.sentinelone.com/feed/", "SentinelOne"],
-                   ["https://redcanary.com/feed/", "RedCanary"],
-                   ["https://cybersecurity.att.com/site/blog-all-rss", "ATT"]]
-                   
-
-    GovRssFeedList = [["https://www.cisa.gov/uscert/ncas/alerts.xml", "US-CERT CISA"],
-                      ["https://www.ncsc.gov.uk/api/1/services/v1/report-rss-feed.xml", "NCSC"],
-                      ["https://www.cisecurity.org/feed/advisories", "Center of Internet Security"]]
-
-    
-
+if __name__ == '__main__':
     while(True):
-            
-        for RssItem in RssFeedList:
-            FnGetRssFromUrl(RssItem, 1)
-            FnCreateLogStringAndWriteToDiscord(RssItem[1])
+        for rss_item in rss_feed_list:
+            get_rss_from_url(rss_item, 1)
+            write_status_messages_to_discord(rss_item[1])
 
-        for GovRssItem in GovRssFeedList:
-            FnGetRssFromUrl(GovRssItem, 2)
-            FnCreateLogStringAndWriteToDiscord(GovRssItem[1])
+        for rss_item in gov_rss_feed_list:
+            get_rss_from_url(rss_item, 2)
+            write_status_messages_to_discord(rss_item[1])
 
-        FnGetRansomwareUpdates()
-        FnCreateLogStringAndWriteToDiscord("Ransomware TA List")
+        get_ransomware_updates()
+        write_status_messages_to_discord('Ransomware TA List')
 
         time.sleep(1800)
-                      
-    
-EntryMain()
-    
-
-    
