@@ -94,6 +94,15 @@ def get_rss_from_url(rss_item, hook_channel_descriptor):
         except: 
             date_activity = time.strftime('%Y-%m-%dT%H:%M:%S', rss_object.updated_parsed)
 
+            ###
+            # No Need to create an entry in Config.txt 
+            # by @JMousqueton               
+            try:
+                TmpObject = FileConfig.get('main', Entries["group_name"])
+            except:
+                FileConfig.set('main', Entries["group_name"], " = ?")
+                TmpObject = FileConfig.get('main', Entries["group_name"])
+
         config_entry = config_file.get('main', rss_item[1])
 
         if config_entry.endswith('?'):
@@ -113,6 +122,50 @@ def get_rss_from_url(rss_item, hook_channel_descriptor):
         else:
             pass
 
+    LastSaved = FileConfig.get('main', RssItem[1])
+
+    for RssObject in NewsFeed.entries:
+
+        try:
+            DateActivity = time.strftime('%Y-%m-%dT%H:%M:%S', RssObject.published_parsed)
+        except: 
+            DateActivity = time.strftime('%Y-%m-%dT%H:%M:%S', RssObject.updated_parsed)
+
+        ###
+        #  No Need to create an entry in Config.txt 
+        #  by @JMousqueton               
+        try:
+            TmpObject = FileConfig.get('main', RssItem[1])
+        except:
+            FileConfig.set('main', RssItem[1], " = ?")
+            TmpObject = FileConfig.get('main', RssItem[1])    
+        ### 
+        
+        if "?" in TmpObject:
+            IsInitialRun = True
+            FileConfig.set('main', RssItem[1], DateActivity)
+
+        if IsInitialRun is False:
+            if(TmpObject >= DateActivity):
+                continue
+            else:
+                FileConfig.set('main', RssItem[1], DateActivity)
+            
+        OutputMessage = RssItem[1]
+        OutputMessage += "\n"
+        OutputMessage += "Date: " + DateActivity
+        OutputMessage += "\n"
+        OutputMessage += "Title: " + RssObject.title
+        OutputMessage += "\n"
+        OutputMessage += "Read more: " + RssObject.link
+        OutputMessage += "\n"
+
+        if HookChannelDesciptor == 1:
+            PrivateSectorFeed.send(OutputMessage)
+
+        if HookChannelDesciptor == 2:
+            GovernmentFeed.send(OutputMessage)
+           
         time.sleep(3)
 
     with open(configuration_file_path, 'w') as f:
