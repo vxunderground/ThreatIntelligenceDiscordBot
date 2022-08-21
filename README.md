@@ -1,20 +1,23 @@
 # Threat Intelligence Discord Bot
 The vx-underground Threat Intelligence Discord Bot gets updates from various clearnet domains, ransomware threat actor domains, and Telegram channels. This bot will check for updates in intervals of 1800 seconds (omit Telegram bot, this is gotten in real time).
 
+* Don't want to set it up? [This Threat Intelligence bot is live on Discord now.](https://discord.com/invite/MSjAQe4PUy)
 * Written in Python 3.10 64bit
 * Can run on Windows or Linux
 * Requires Discord Webhook
 * Easily add or remove domains wanting to be monitored
 * ~~Written by a C++ Windows programmer, variable and function naming convention will probably make you puke~~
-    - Refactored by hRun, code is less ugly to Python programmers
-* 2 Scripts are present, 1 is responsible for ransomware groups and clearnet domains. The other is responsible for handling Telegram channels.
+    - Refactored by [hRun](https://github.com/hRun), code is less ugly to Python programmers
+* 2 Scripts are present in the /Source/ directory
+    - DiscordIntelBot.py: responsible for ransomware groups and clearnet domains
+    - TelegramIntelBot.py: responsible for handling Telegram channels
 
 # Getting Started
 * Step 1. Make a web hook. Not sure how to make a webhook? [Discord makes it easy!](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
 * Step 2. Create the Config.txt file. This Config.txt stores when data was recently updated. If a value has a "?" this means it has never received an update and/or is a new entry. By default the file is expected in the same path as the scripts. Change configuration_file_path in DiscordIntelBot.py if you'd like to keep it somewhere else.
-* Step 2a. If you'd like to monitor Telegram channels, you will need a [Telegram API Key](https://core.telegram.org/api/obtaining_api_id)
+    - If you'd like to monitor Telegram channels, you will need a [Telegram API Key](https://core.telegram.org/api/obtaining_api_id)
 * Step 3. Have internet connection
-* Step 3a. If you're running the Telegram channel monitor, please note it downloads images from the Telegram channel. Sufficient hard disk space will be required to store images. By default downloaded images are stored in the TelegramImages subfolder. Change download_path in TelegramIntelBot.py if you'd like to store them somewhere else.
+    - If you're running the Telegram channel monitor, please note it downloads images from the Telegram channel. Sufficient hard disk space will be required to store images. By default downloaded images are stored in the TelegramImages subfolder. Change download_path in TelegramIntelBot.py if you'd like to store them somewhere else.
 * Step 4. Run the scripts. They'll run indefinitely, so feel free to run them as services, but not as scheduled tasks.
 
 # Known issues
@@ -76,4 +79,9 @@ async def EventHandler(EventObject):
 ```
 
 # Credit
-This was made by smelly__vx over a slow and boring weekend. We hope it provides some value to your channel and/or organization.
+- Original commit, code base, proof-of-concept by [smelly__vx](https://twitter.com/smelly__vx)
+- General quality of life improvements and debugging by [Julien Mousqueton](https://github.com/JMousqueton)
+- Feature enhancement, standardization, etc. by [hRun](https://github.com/hRun)
+
+
+
