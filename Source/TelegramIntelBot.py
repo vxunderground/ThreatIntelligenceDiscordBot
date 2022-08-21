@@ -1,6 +1,6 @@
 import os
 import time
-from discord import Webhook, RequestsWebhookAdapter
+from discord import Webhook, RequestsWebhookAdapterv, File
 from telethon import TelegramClient, events, sync
 from telethon.errors.rpcerrorlist import UsernameInvalidError
 from telethon.tl.functions.channels import JoinChannelRequest
@@ -57,10 +57,27 @@ telegram_feed_list = {
 for feed in telegram_feed_list:
     vars()[feed] = telegram_client.get_entity(telegram_feed_list[feed])
 
-    try:
+    try: # TODO only join if not already joined
         telegram_client(JoinChannelRequest(vars()['feed']))
     except (UsernameInvalidError, TypeError, ValueError): # telegram user or channel was not found
         continue
+
+
+"""
+TODO test if this generic approch can replace repetitive code
+
+@telegram_client.on(events.NewMessage(incoming=True))
+async def event_handler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
+        
+    for channel in telegram_feed_list:
+        if channel.id == event.message.peer_id.channel_id:
+            create_telegram_output(channel.title, event.message.message)
+            break
+"""
 
 
 ##****Arvin Group handler****
@@ -68,7 +85,7 @@ for feed in telegram_feed_list:
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("Arvin Group", event.message.message)
@@ -78,7 +95,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("vx-underground", event.message.message)
@@ -93,7 +110,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("LogsFree", event.message.message)
@@ -103,7 +120,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("Darknet", event.message.message)
@@ -113,7 +130,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("GonjeshkeDarand", event.message.message)
@@ -123,7 +140,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("PryntStealer", event.message.message)
@@ -133,7 +150,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("SiegedSec", event.message.message)
@@ -143,7 +160,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("BreachedForums", event.message.message)
@@ -153,7 +170,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("ArmyofThieves", event.message.message)
@@ -163,7 +180,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("SharpBoys", event.message.message)
@@ -173,7 +190,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("WLxDCONFIGS", event.message.message)
@@ -183,7 +200,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("TommyFlounder", event.message.message)
@@ -193,7 +210,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("GhostSec", event.message.message)
@@ -203,7 +220,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("ConfigMaster", event.message.message)
@@ -213,7 +230,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("Zer0DayLab", event.message.message)
@@ -223,7 +240,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("HADESSHOP", event.message.message)
@@ -233,7 +250,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("NoHideSpace", event.message.message)
@@ -243,7 +260,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("KILLNET", event.message.message)
@@ -253,7 +270,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("LOLZTEAM", event.message.message)
@@ -263,7 +280,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("Ares", event.message.message)
@@ -273,7 +290,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("ZeroDayToday", event.message.message)
@@ -283,7 +300,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("CPartisan", event.message.message)
@@ -293,7 +310,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("club1337", event.message.message)
@@ -303,7 +320,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("Documentor", event.message.message)
@@ -313,7 +330,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("DDoSecrets", event.message.message)
@@ -323,7 +340,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("SnatchTeam", event.message.message)
@@ -333,7 +350,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("inj3ct0r", event.message.message)
@@ -343,7 +360,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("RalfHacker", event.message.message)
@@ -353,7 +370,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("RuHeight", event.message.message)
@@ -363,7 +380,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("Data1eaks", event.message.message)
@@ -373,7 +390,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("R0Crew", event.message.message)
@@ -383,7 +400,7 @@ async def EventHandler(event):
 async def EventHandler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = discord.File(open(image_data, 'rb'))
+        upload_file = File(open(image_data, 'rb'))
         telegram_feed.send(file=upload_file)
         
     create_telegram_output("HeawsNet", event.message.message)
