@@ -97,7 +97,7 @@ def get_rss_from_url(rss_item, hook_channel_descriptor):
 
         try:
             config_entry = config_file.get('main', rss_item[1])
-        except:
+        except NoOptionError: # automatically add newly discovered groups to config
             config_file.set('main', rss_item[1], " = ?")
             config_entry = config_file.get('main', rss_item[1])   
 
@@ -143,30 +143,3 @@ if __name__ == '__main__':
         write_status_messages_to_discord('Ransomware TA List')
 
         time.sleep(1800)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
