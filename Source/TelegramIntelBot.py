@@ -74,7 +74,7 @@ async def event_handler(event):
         telegram_feed.send(file=upload_file)
         
     for channel in telegram_feed_list:
-        if channel.id == event.message.peer_id.channel_id:
+        if vars()[channel].id == event.message.peer_id.channel_id:
             create_telegram_output(channel.title, event.message.message)
             break
 """
