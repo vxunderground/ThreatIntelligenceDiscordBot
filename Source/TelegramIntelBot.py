@@ -1,446 +1,412 @@
 import os
 import time
-from discord import Webhook, RequestsWebhookAdapter
+from discord import Webhook, RequestsWebhookAdapterv, File
 from telethon import TelegramClient, events, sync
+from telethon.errors.rpcerrorlist import UsernameInvalidError
 from telethon.tl.functions.channels import JoinChannelRequest
 
 # downloads to the TelegramImages directory by default, replace if desired otherwise
-DownloadPath = os.path.join(os.path.split(os.path.abspath(__file__))[0], '..', 'TelegramImages')
-TelegramClientObject = TelegramClient("BotName", "API-ID", "API-KEY") ##telegram api stuff goes here
-TelegramClientObject.start()
+image_download_path = os.path.join(os.path.split(os.path.abspath(__file__))[0], '..', 'TelegramImages')
 
-ArvinGroup = TelegramClientObject.get_entity("https://t.me/arvin_club")
-VxUnderground = TelegramClientObject.get_entity("https://t.me/vxunderground")
-Malpedia = TelegramClientObject.get_entity("https://t.me/malpedia")
-LogsFree = TelegramClientObject.get_entity("https://t.me/locativelogsfree")
-Darknet = TelegramClientObject.get_entity("https://t.me/dbforall")
-GonjeshkeDarand = TelegramClientObject.get_entity("https://t.me/GonjeshkeDarand")
-PryntStealer = TelegramClientObject.get_entity("https://t.me/officialpryntsoftware")
-SiegedSec = TelegramClientObject.get_entity("https://t.me/SiegedSec")
-BreachedForums = TelegramClientObject.get_entity("https://t.me/breached_co")
-ArmyofThieves = TelegramClientObject.get_entity("https://t.me/ArmyThieves")
-SharpBoys = TelegramClientObject.get_entity("https://t.me/sharpboys_3")
-WLxDCONFIGS = TelegramClientObject.get_entity("https://t.me/WLxD_CRX")
-TommyFlounder = TelegramClientObject.get_entity("https://t.me/floundertech")
-GhostSec = TelegramClientObject.get_entity("https://t.me/GhostSecc")
-ConfigMaster = TelegramClientObject.get_entity("https://t.me/config_combos")
-Zer0DayLab = TelegramClientObject.get_entity("https://t.me/zer0daylab")
-HADESSHOP = TelegramClientObject.get_entity("https://t.me/hadesh0p")
-NoHideSpace = TelegramClientObject.get_entity("https://t.me/nohidespace")
-KILLNET = TelegramClientObject.get_entity("https://t.me/killnet_reservs")
-LOLZTEAM = TelegramClientObject.get_entity("https://t.me/lolz_guru")
-Ares = TelegramClientObject.get_entity("https://t.me/aresmainchannel")
-ZeroDayToday = TelegramClientObject.get_entity("https://t.me/LearnExploit")
-CPartisan = TelegramClientObject.get_entity("https://t.me/cpartisans")
-club1337 = TelegramClientObject.get_entity("https://t.me/club1337")
-Documentor = TelegramClientObject.get_entity("https://t.me/documentors")
-DDoSecrets = TelegramClientObject.get_entity("https://t.me/AntiPlumbers")
-SnatchTeam = TelegramClientObject.get_entity("https://t.me/snatch_news")
-inj3ct0r = TelegramClientObject.get_entity("https://t.me/inj3ct0rs")
-RalfHacker = TelegramClientObject.get_entity("https://t.me/RalfHackerChannel")
-RuHeight = TelegramClientObject.get_entity("https://t.me/ruheight")
-Data1eaks = TelegramClientObject.get_entity("https://t.me/data1eaks")
-R0Crew = TelegramClientObject.get_entity("https://t.me/R0_Crew")
-HeawsNet = TelegramClientObject.get_entity("https://t.me/heawsnet")
+# put your telegram api stuff in here
+telegram_client = TelegramClient('Bot Name', 'API ID', 'API HASH')
+telegram_client.start()
 
-TelegramClientObject(JoinChannelRequest(VxUnderground))
-TelegramClientObject(JoinChannelRequest(ArvinGroup))
-TelegramClientObject(JoinChannelRequest(Malpedia))
-TelegramClientObject(JoinChannelRequest(LogsFree))
-TelegramClientObject(JoinChannelRequest(Darknet))
-TelegramClientObject(JoinChannelRequest(GonjeshkeDarand))
-TelegramClientObject(JoinChannelRequest(PryntStealer))
-TelegramClientObject(JoinChannelRequest(SiegedSec))
-TelegramClientObject(JoinChannelRequest(BreachedForums))
-TelegramClientObject(JoinChannelRequest(ArmyofThieves))
-TelegramClientObject(JoinChannelRequest(SharpBoys))
-TelegramClientObject(JoinChannelRequest(WLxDCONFIGS))
-TelegramClientObject(JoinChannelRequest(TommyFlounder))
-TelegramClientObject(JoinChannelRequest(GhostSec))
-TelegramClientObject(JoinChannelRequest(ConfigMaster))
-TelegramClientObject(JoinChannelRequest(Zer0DayLab))
-TelegramClientObject(JoinChannelRequest(HADESSHOP))
-TelegramClientObject(JoinChannelRequest(NoHideSpace))
-TelegramClientObject(JoinChannelRequest(KILLNET))
-TelegramClientObject(JoinChannelRequest(LOLZTEAM))
-TelegramClientObject(JoinChannelRequest(Ares))
-TelegramClientObject(JoinChannelRequest(ZeroDayToday))
-TelegramClientObject(JoinChannelRequest(CPartisan))
-TelegramClientObject(JoinChannelRequest(club1337))
-TelegramClientObject(JoinChannelRequest(Documentor))
-TelegramClientObject(JoinChannelRequest(DDoSecrets))
-TelegramClientObject(JoinChannelRequest(SnatchTeam))
-TelegramClientObject(JoinChannelRequest(inj3ct0r))
-TelegramClientObject(JoinChannelRequest(RalfHacker))
-TelegramClientObject(JoinChannelRequest(RuHeight))
-TelegramClientObject(JoinChannelRequest(Data1eaks))
-TelegramClientObject(JoinChannelRequest(R0Crew))
-TelegramClientObject(JoinChannelRequest(HeawsNet))
+# put the discord hook url to the channel you want to receive feeds in here
+telegram_feed = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
+#discord_client = discord.Client()
+
+telegram_feed_list = {
+    'ArvinGroup': 'https://t.me/arvin_club',
+    'VxUnderground': 'https://t.me/vxunderground',
+    'Malpedia': 'https://t.me/malpedia',
+    'LogsFree': 'https://t.me/locativelogsfree',
+    'Darknet': 'https://t.me/dbforall',
+    'GonjeshkeDarand': 'https://t.me/GonjeshkeDarand',
+    'PryntStealer': 'https://t.me/officialpryntsoftware',
+    'SiegedSec': 'https://t.me/SiegedSec',
+    'BreachedForums': 'https://t.me/breached_co',
+    'ArmyofThieves': 'https://t.me/ArmyThieves',
+    'SharpBoys': 'https://t.me/sharpboys_3',
+    'WLxDCONFIGS': 'https://t.me/WLxD_CRX',
+    'TommyFlounder': 'https://t.me/floundertech',
+    'GhostSec': 'https://t.me/GhostSecc',
+    'ConfigMaster': 'https://t.me/config_combos',
+    'Zer0DayLab': 'https://t.me/zer0daylab',
+    'HADESSHOP': 'https://t.me/hadesh0p',
+    'NoHideSpace': 'https://t.me/nohidespace',
+    'KILLNET': 'https://t.me/killnet_reservs',
+    'LOLZTEAM': 'https://t.me/lolz_guru',
+    'Ares': 'https://t.me/aresmainchannel',
+    'ZeroDayToday': 'https://t.me/LearnExploit',
+    'CPartisan': 'https://t.me/cpartisans',
+    'club1337': 'https://t.me/club1337',
+    'Documentor': 'https://t.me/documentors',
+    'DDoSecrets': 'https://t.me/AntiPlumbers',
+    'SnatchTeam': 'https://t.me/snatch_news',
+    'inj3ct0r': 'https://t.me/inj3ct0rs',
+    'RalfHacker': 'https://t.me/RalfHackerChannel',
+    'RuHeight': 'https://t.me/ruheight',
+    'Data1eaks': 'https://t.me/data1eaks',
+    'R0Crew': 'https://t.me/R0_Crew',
+    'HeawsNet': 'https://t.me/heawsnet'
+}
 
 
-TelegramFeed = Webhook.from_url("https://discord.com/api/webhooks/000/0000", adapter=RequestsWebhookAdapter()) ## discord url hook goes here
-DiscordClient = discord.Client()
+# Instatiate object per feed item
+for feed in telegram_feed_list:
+    vars()[feed] = telegram_client.get_entity(telegram_feed_list[feed])
+
+    try: # TODO only join if not already joined
+        telegram_client(JoinChannelRequest(vars()['feed']))
+    except (UsernameInvalidError, TypeError, ValueError): # telegram user or channel was not found
+        continue
+
+
+"""
+TODO test if this generic approch can replace repetitive code
+
+@telegram_client.on(events.NewMessage(incoming=True))
+async def event_handler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
+        
+    for channel in telegram_feed_list:
+        if vars()[channel].id == event.message.peer_id.channel_id:
+            create_telegram_output(channel.title, event.message.message)
+            break
+"""
+
 
 ##****Arvin Group handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=ArvinGroup))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=ArvinGroup))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("Arvin Group", EventObject.message.message)
+    create_telegram_output("Arvin Group", event.message.message)
 
 ##****vx-underground handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=VxUnderground))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=VxUnderground))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("vx-underground", EventObject.message.message)
+    create_telegram_output("vx-underground", event.message.message)
 
 ##****Malpedia handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=Malpedia))
-async def EventHandler(EventObject):
-    CreateTelegramMessageOutput("Malpedia", EventObject.message.message)
+@telegram_client.on(events.NewMessage(incoming=True,chats=Malpedia))
+async def EventHandler(event):
+    create_telegram_output("Malpedia", event.message.message)
 
 ##****LogsFree handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=LogsFree))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=LogsFree))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("LogsFree", EventObject.message.message)
+    create_telegram_output("LogsFree", event.message.message)
     
 ##****Darknet handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=Darknet))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=Darknet))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("Darknet", EventObject.message.message)
+    create_telegram_output("Darknet", event.message.message)
     
 ##****GonjeshkeDarand handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=GonjeshkeDarand))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=GonjeshkeDarand))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("GonjeshkeDarand", EventObject.message.message)
+    create_telegram_output("GonjeshkeDarand", event.message.message)
     
 ##****PryntStealer handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=PryntStealer))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=PryntStealer))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("PryntStealer", EventObject.message.message)
+    create_telegram_output("PryntStealer", event.message.message)
     
 ##****SiegedSec handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=SiegedSec))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=SiegedSec))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("SiegedSec", EventObject.message.message)
+    create_telegram_output("SiegedSec", event.message.message)
 
 ##****BreachedForums handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=BreachedForums))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=BreachedForums))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("BreachedForums", EventObject.message.message)
+    create_telegram_output("BreachedForums", event.message.message)
     
 ##****ArmyofThieves handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=ArmyofThieves))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=ArmyofThieves))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("ArmyofThieves", EventObject.message.message)
+    create_telegram_output("ArmyofThieves", event.message.message)
 
 ##****SharpBoys handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=SharpBoys))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=SharpBoys))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("SharpBoys", EventObject.message.message)
+    create_telegram_output("SharpBoys", event.message.message)
 
 ##****WLxDCONFIGS handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=WLxDCONFIGS))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=WLxDCONFIGS))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("WLxDCONFIGS", EventObject.message.message)
+    create_telegram_output("WLxDCONFIGS", event.message.message)
     
 ##****TommyFlounder handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=TommyFlounder))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=TommyFlounder))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("TommyFlounder", EventObject.message.message)
+    create_telegram_output("TommyFlounder", event.message.message)
 
 ##****GhostSec handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=GhostSec))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=GhostSec))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("GhostSec", EventObject.message.message)
+    create_telegram_output("GhostSec", event.message.message)
     
 ##****ConfigMaster handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=ConfigMaster))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=ConfigMaster))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("ConfigMaster", EventObject.message.message)
+    create_telegram_output("ConfigMaster", event.message.message)
 
 ##****Zer0DayLab handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=Zer0DayLab))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=Zer0DayLab))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("Zer0DayLab", EventObject.message.message)
+    create_telegram_output("Zer0DayLab", event.message.message)
 
 ##****HADESSHOP handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=HADESSHOP))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=HADESSHOP))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("HADESSHOP", EventObject.message.message)
+    create_telegram_output("HADESSHOP", event.message.message)
 
 ##****NoHideSpace handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=NoHideSpace))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=NoHideSpace))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("NoHideSpace", EventObject.message.message)
+    create_telegram_output("NoHideSpace", event.message.message)
 
 ##****KILLNET handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=KILLNET))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=KILLNET))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("KILLNET", EventObject.message.message)
+    create_telegram_output("KILLNET", event.message.message)
 
 ##****LOLZTEAM handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=LOLZTEAM))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=LOLZTEAM))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("LOLZTEAM", EventObject.message.message)
+    create_telegram_output("LOLZTEAM", event.message.message)
 
 ##****Ares handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=Ares))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=Ares))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("Ares", EventObject.message.message)
+    create_telegram_output("Ares", event.message.message)
 
 ##****ZeroDayToday handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=ZeroDayToday))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=ZeroDayToday))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("ZeroDayToday", EventObject.message.message)
+    create_telegram_output("ZeroDayToday", event.message.message)
     
 ##****CPartisan handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=CPartisan))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=CPartisan))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("CPartisan", EventObject.message.message)
+    create_telegram_output("CPartisan", event.message.message)
     
 ##****club1337 handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=club1337))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=club1337))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("club1337", EventObject.message.message)
+    create_telegram_output("club1337", event.message.message)
     
 ##****Documentor handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=Documentor))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=Documentor))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("Documentor", EventObject.message.message)
+    create_telegram_output("Documentor", event.message.message)
     
 ##****DDoSecrets handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=DDoSecrets))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=DDoSecrets))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("DDoSecrets", EventObject.message.message)
+    create_telegram_output("DDoSecrets", event.message.message)
     
 ##****SnatchTeam handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=SnatchTeam))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=SnatchTeam))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("SnatchTeam", EventObject.message.message)
+    create_telegram_output("SnatchTeam", event.message.message)
     
 ##****inj3ct0r handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=inj3ct0r))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=inj3ct0r))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("inj3ct0r", EventObject.message.message)
+    create_telegram_output("inj3ct0r", event.message.message)
 
 ##****RalfHacker handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=RalfHacker))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=RalfHacker))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("RalfHacker", EventObject.message.message)
+    create_telegram_output("RalfHacker", event.message.message)
 
 ##****RuHeight handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=RuHeight))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=RuHeight))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("RuHeight", EventObject.message.message)
+    create_telegram_output("RuHeight", event.message.message)
 
 ##****Data1eaks handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=Data1eaks))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=Data1eaks))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("Data1eaks", EventObject.message.message)
+    create_telegram_output("Data1eaks", event.message.message)
 
 ##****R0Crew handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=R0Crew))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=R0Crew))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("R0Crew", EventObject.message.message)
+    create_telegram_output("R0Crew", event.message.message)
     
 ##****HeawsNet handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=HeawsNet))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
+@telegram_client.on(events.NewMessage(incoming=True,chats=HeawsNet))
+async def EventHandler(event):
+    if event.photo:
+        image_data = await event.download_media(image_download_path)
+        upload_file = File(open(image_data, 'rb'))
+        telegram_feed.send(file=upload_file)
         
-    CreateTelegramMessageOutput("HeawsNet", EventObject.message.message)
+    create_telegram_output("HeawsNet", event.message.message)
 
 
-##****Telegram string builder****
-def CreateTelegramMessageOutput(GroupString, MessageBuffer):
+def create_telegram_output(group, message):
     telegram_feed.send(f'{group} {time.ctime()} {message}')
     
 

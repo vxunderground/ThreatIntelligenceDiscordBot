@@ -56,14 +56,7 @@ The "?" indicates it has never received an update.
 
 # Adding or removing Telegram channels to monitor
 * NOTE: The Telegram API is an ugly monster and does not make determining what is being filtered an easy task. This script contains A LOT of repetitive code. Perhaps clean it up and send a merge request? =D
-* Step 1. Retrieve the Telegram channel entity via 
-```
-NewTelegramChannelName = TelegramClientObject.get_entity("https://t.me/TelegramChannelLink")
-```
-* Step 2. Send a join request when the application launches via 
-```
-TelegramClientObject(JoinChannelRequest(NewTelegramChannelName))
-```
+* Step 1. Add an entry to the telegram_feed_list dict.
 * Step 3. Set the Telegram async filter via
 ```
 ##****NewTelegramChannelName handler****
@@ -82,6 +75,3 @@ async def EventHandler(EventObject):
 - Original commit, code base, proof-of-concept by [smelly__vx](https://twitter.com/smelly__vx)
 - General quality of life improvements and debugging by [Julien Mousqueton](https://github.com/JMousqueton)
 - Feature enhancement, standardization, etc. by [hRun](https://github.com/hRun)
-
-
-
