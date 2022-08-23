@@ -1,6 +1,6 @@
 import os
 import time
-from discord import Webhook, RequestsWebhookAdapterv, File
+from discord import Webhook, RequestsWebhookAdapter, File
 from telethon import TelegramClient, events, sync
 from telethon.errors.rpcerrorlist import UsernameInvalidError
 from telethon.tl.functions.channels import JoinChannelRequest
