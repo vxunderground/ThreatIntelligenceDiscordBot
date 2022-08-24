@@ -86,14 +86,18 @@ def get_ransomware_updates():
 
 
 def get_rss_from_url(rss_item, hook_channel_descriptor):
-    news_feed = feedparser.parse(rss_item[0])
-    date_activity = None
+    feed_entries = feedparser.parse(rss_item[0]).entries
 
-    for rss_object in news_feed.entries:
+    # This is needed to ensure that the oldest articles are proccessed first. See https://github.com/vxunderground/ThreatIntelligenceDiscordBot/issues/9 for reference
+    for rss_object in feed_entries:
         try:
-            date_activity = time.strftime('%Y-%m-%dT%H:%M:%S', rss_object.published_parsed)
-        except: 
-            date_activity = time.strftime('%Y-%m-%dT%H:%M:%S', rss_object.updated_parsed)
+            rss_object["publish_date"] = time.strftime('%Y-%m-%dT%H:%M:%S', rss_object.published_parsed)
+        except:
+            rss_object["publish_date"] = time.strftime('%Y-%m-%dT%H:%M:%S', rss_object.updated_parsed)
+
+    feed_entries.sort(key=lambda rss_object:rss_object["publish_date"])
+
+    for rss_object in feed_entries:
 
         try:
             config_entry = config_file.get('main', rss_item[1])
@@ -102,14 +106,14 @@ def get_rss_from_url(rss_item, hook_channel_descriptor):
             config_entry = config_file.get('main', rss_item[1])   
 
         if config_entry.endswith('?'):
-            config_file.set('main', rss_item[1], date_activity)
+            config_file.set('main', rss_item[1], rss_object["publish_date"])
         else:
-            if(config_entry >= date_activity):
+            if(config_entry >= rss_object["publish_date"]):
                 continue
             else:
-                config_file.set('main', rss_item[1], date_activity)
+                config_file.set('main', rss_item[1], rss_object["publish_date"])
 
-        message = f'{rss_item[1]}\nDate: {date_activity}\nTitle: {rss_object.title}\nRead more: {rss_object.link}\n'
+        message = f'{rss_item[1]}\nDate: {rss_object["publish_date"]}\nTitle: {rss_object.title}\nRead more: {rss_object.link}\n'
 
         if hook_channel_descriptor == 1:
             private_sector_feed.send(message)
