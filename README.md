@@ -48,28 +48,9 @@ In the Python script:
                      ["https://1337WebsiteIWannaFollow.com/feed/", "1337Website"]]
 ```
 
-In the config file:
-```
-1337Website = ?
-```
-The "?" indicates it has never received an update.
-
 # Adding or removing Telegram channels to monitor
-* NOTE: The Telegram API is an ugly monster and does not make determining what is being filtered an easy task. This script contains A LOT of repetitive code. Perhaps clean it up and send a merge request? =D
-* Step 1. Add an entry to the telegram_feed_list dict.
+Simply add an entry to the telegram_feed_list dict.
 * Step 3. Set the Telegram async filter via
-```
-##****NewTelegramChannelName handler****
-@TelegramClientObject.on(events.NewMessage(incoming=True,chats=NewTelegramChannelName))
-async def EventHandler(EventObject):
-
-    if EventObject.photo:
-        ImageData = await EventObject.download_media(DownloadPath)
-        UploadFile = discord.File(open(ImageData, 'rb'))
-        TelegramFeed.send(file=UploadFile)
-        
-    CreateTelegramMessageOutput("NewTelegramChannelName", EventObject.message.message)
-```
 
 # Credit
 - Original commit, code base, proof-of-concept by [smelly__vx](https://twitter.com/smelly__vx)
