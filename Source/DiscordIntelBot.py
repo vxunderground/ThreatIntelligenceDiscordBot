@@ -6,6 +6,8 @@ import time
 from configparser import ConfigParser, NoOptionError
 from discord import Webhook, RequestsWebhookAdapter
 
+from Formatting import format_single_article
+
 # expects the configuration file in the same directory as this script by default, replace if desired otherwise
 configuration_file_path = os.path.join(os.path.split(os.path.abspath(__file__))[0], 'Config.txt')
 
@@ -87,6 +89,7 @@ def get_ransomware_updates():
 
 def get_rss_from_url(rss_item, hook_channel_descriptor):
     feed_entries = feedparser.parse(rss_item[0]).entries
+    messages = []
 
     # This is needed to ensure that the oldest articles are proccessed first. See https://github.com/vxunderground/ThreatIntelligenceDiscordBot/issues/9 for reference
     for rss_object in feed_entries:
@@ -97,8 +100,8 @@ def get_rss_from_url(rss_item, hook_channel_descriptor):
 
     feed_entries.sort(key=lambda rss_object:rss_object["publish_date"])
 
-    for rss_object in feed_entries:
-
+    # Only take the latest 10, as this is more than enough given the half an hour interval the script is run at, and discord can't send more than 10 embedded messages at once
+    for rss_object in feed_entries[-10:]:
         try:
             config_entry = config_file.get('main', rss_item[1])
         except NoOptionError: # automatically add newly discovered groups to config
@@ -113,16 +116,15 @@ def get_rss_from_url(rss_item, hook_channel_descriptor):
             else:
                 config_file.set('main', rss_item[1], rss_object["publish_date"])
 
-        message = f'{rss_item[1]}\nDate: {rss_object["publish_date"]}\nTitle: {rss_object.title}\nRead more: {rss_object.link}\n'
+        messages.append(format_single_article(rss_item[1], rss_object))
 
-        if hook_channel_descriptor == 1:
-            private_sector_feed.send(message)
-        elif hook_channel_descriptor == 2:
-            government_feed.send(message)
-        else:
-            pass
+    if hook_channel_descriptor == 1:
+        private_sector_feed.send(embeds=messages)
+    elif hook_channel_descriptor == 2:
+        government_feed.send(embeds=messages)
+    else:
+        pass
 
-        time.sleep(3)
 
     with open(configuration_file_path, 'w') as f:
         config_file.write(f)
@@ -138,10 +140,12 @@ if __name__ == '__main__':
         for rss_item in rss_feed_list:
             get_rss_from_url(rss_item, 1)
             write_status_messages_to_discord(rss_item[1])
+            time.sleep(3) # To avoid rate limiting
 
         for rss_item in gov_rss_feed_list:
             get_rss_from_url(rss_item, 2)
             write_status_messages_to_discord(rss_item[1])
+            time.sleep(3) # To avoid rate limiting
 
         get_ransomware_updates()
         write_status_messages_to_discord('Ransomware TA List')
