@@ -5,6 +5,7 @@ import dateutil.parser
 
 
 MAIN_COLOR = 0x000000
+THUMBNAIL_URL = "https://avatars.githubusercontent.com/u/87911852?s=280&v=4"
 
 
 def cut_string(string, length):
@@ -59,6 +60,8 @@ def format_single_article(article):
         )
 
     else:
+        message.set_thumbnail(url=THUMBNAIL_URL)
+
         message.add_field(
             name=source_text,
             value=date_text,
