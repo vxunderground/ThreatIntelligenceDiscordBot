@@ -118,12 +118,13 @@ def get_rss_from_url(rss_item, hook_channel_descriptor):
 
         messages.append(format_single_article(rss_item[1], rss_object))
 
-    if hook_channel_descriptor == 1:
-        private_sector_feed.send(embeds=messages)
-    elif hook_channel_descriptor == 2:
-        government_feed.send(embeds=messages)
-    else:
-        pass
+    if messages:
+        if hook_channel_descriptor == 1:
+            private_sector_feed.send(embeds=messages)
+        elif hook_channel_descriptor == 2:
+            government_feed.send(embeds=messages)
+        else:
+            pass
 
 
     with open(configuration_file_path, 'w') as f:
