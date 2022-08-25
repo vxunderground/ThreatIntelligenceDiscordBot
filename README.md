@@ -56,3 +56,4 @@ Simply add an entry to the telegram_feed_list dict.
 - Original commit, code base, proof-of-concept by [smelly__vx](https://twitter.com/smelly__vx)
 - General quality of life improvements and debugging by [Julien Mousqueton](https://github.com/JMousqueton)
 - Feature enhancement, standardization, etc. by [hRun](https://github.com/hRun)
+- Feature enhancement, standardization, etc. by [come2darkside](https://twitter.com/come2darkside_)
