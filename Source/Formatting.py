@@ -32,23 +32,37 @@ def format_single_article(source, article):
                 description += ".."
                 break
 
-    message = Embed(
-        title=article["title"],
-        url=article["link"],
-        color=MAIN_COLOR,
+    source_text = f"**Source**: *{source}*"
+    date_text = (
+        "**Date**: " + " | *".join(format_datetime(article["publish_date"])) + "*"
     )
 
-    if description:
+    if "link" in article:
+        message = Embed(
+            title=article["title"],
+            url=article["link"],
+            color=MAIN_COLOR,
+        )
+    else:
+        message = Embed(
+            title=article["title"],
+            color=MAIN_COLOR,
+        )
+
+    if description and "link" in article:
         message.add_field(name=description, value=article["link"], inline=False)
 
-    message.add_field(
-        name="Details: ",
-        value="**Source:** "
-        + source
-        + "\n"
-        + "**Date:** "
-        + " | *".join(format_datetime(article["publish_date"]))
-        + "*",
-        inline=False,
-    )
+        message.add_field(
+            name="Details: ",
+            value=source_text + "\n" + date_text,
+            inline=False,
+        )
+
+    else:
+        message.add_field(
+            name=source_text,
+            value=date_text,
+            inline=False,
+        )
+
     return message
