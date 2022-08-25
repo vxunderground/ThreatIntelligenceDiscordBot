@@ -4,6 +4,10 @@ import requests
 import time
 from enum import Enum
 
+import signal
+import sys
+import atexit
+
 import feedparser
 from configparser import ConfigParser, NoOptionError
 from discord import Webhook, RequestsWebhookAdapter
@@ -112,10 +116,9 @@ def get_news_from_rss(rss_item):
 
 
 def proccess_articles(articles):
-    messages = []
+    messages, new_articles = [], []
     articles.sort(key=lambda article: article["publish_date"])
 
-    # Only take the latest 10, as this is more than enough given the half an hour interval the script is run at, and discord can't send more than 10 embedded messages at once
     for article in articles:
         try:
             config_entry = config_file.get("main", article["source"])
@@ -128,27 +131,30 @@ def proccess_articles(articles):
         else:
             if config_entry >= article["publish_date"]:
                 continue
-            else:
-                config_file.set("main", article["source"], article["publish_date"])
 
         messages.append(format_single_article(article))
+        new_articles.append(article)
 
-    with open(configuration_file_path, "w") as f:
-        config_file.write(f)
-
-    return messages
+    return messages, new_articles
 
 
-def send_messages(hook, messages, batch_size=10):
+def send_messages(hook, messages, articles, batch_size=10):
     for i in range(0, len(messages), batch_size):
         hook.send(embeds=messages[i : i + batch_size])
+
+        for article in articles[i : i + batch_size]:
+            config_file.set(
+                "main", article["source"], article["publish_date"]
+            )
+
         time.sleep(3)
 
 
 def process_source(post_gathering_func, source, hook):
     raw_articles = post_gathering_func(source)
-    processed_articles = proccess_articles(raw_articles)
-    send_messages(hook, processed_articles)
+
+    processed_articles, new_raw_articles = proccess_articles(raw_articles)
+    send_messages(hook, processed_articles, new_raw_articles)
 
 
 def handle_rss_feed_list(rss_feed_list, hook):
@@ -162,9 +168,16 @@ def write_status_messages_to_discord(message):
     time.sleep(3)
 
 
-if __name__ == "__main__":
-    while True:
+@atexit.register
+def clean_up_and_close():
+    with open(configuration_file_path, "w") as f:
+        config_file.write(f)
 
+    sys.exit(0)
+
+
+def main():
+    while True:
         for detail_name, details in source_details.items():
             write_status_messages_to_discord(f"Checking {detail_name}")
 
@@ -174,5 +187,12 @@ if __name__ == "__main__":
                 handle_rss_feed_list(details["source"], details["hook"])
 
         write_status_messages_to_discord("All done")
+        with open(configuration_file_path, "w") as f:
+            config_file.write(f)
 
         time.sleep(1800)
+
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, lambda num, frame: clean_up_and_close())
+    main()
