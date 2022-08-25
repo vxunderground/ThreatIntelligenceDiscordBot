@@ -21,7 +21,7 @@ def format_datetime(article_datetime):
     return [article_datetime.strftime("%d, %b %Y"), article_datetime.strftime("%H:%M")]
 
 
-def format_single_article(source, article):
+def format_single_article(article):
     description = ""
 
     if "summary" in article:
@@ -32,7 +32,7 @@ def format_single_article(source, article):
                 description += ".."
                 break
 
-    source_text = f"**Source**: *{source}*"
+    source_text = f"**Source**: *{article['source']}*"
     date_text = (
         "**Date**: " + " | *".join(format_datetime(article["publish_date"])) + "*"
     )

@@ -1,15 +1,19 @@
-import feedparser
 import json
 import os
 import requests
 import time
+from enum import Enum
+
+import feedparser
 from configparser import ConfigParser, NoOptionError
 from discord import Webhook, RequestsWebhookAdapter
 
 from Formatting import format_single_article
 
 # expects the configuration file in the same directory as this script by default, replace if desired otherwise
-configuration_file_path = os.path.join(os.path.split(os.path.abspath(__file__))[0], 'Config.txt')
+configuration_file_path = os.path.join(
+    os.path.split(os.path.abspath(__file__))[0], "Config.txt"
+)
 
 # put the discord hook urls to the channels you want to receive feeds in here
 private_sector_feed = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
@@ -18,7 +22,7 @@ ransomware_feed = Webhook.from_url('https://discord.com/api/webhooks/000/000', a
 # this one is logging of moniotring status only
 status_messages = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
 
-rss_feed_list = [
+private_rss_feed_list = [
     ['https://grahamcluley.com/feed/', 'Graham Cluley'],
     ['https://threatpost.com/feed/', 'Threatpost'],
     ['https://krebsonsecurity.com/feed/', 'Krebs on Security'],
@@ -48,107 +52,127 @@ rss_feed_list = [
 ]
 
 gov_rss_feed_list = [
-    ['https://www.cisa.gov/uscert/ncas/alerts.xml', 'US-CERT CISA'],
-    ['https://www.ncsc.gov.uk/api/1/services/v1/report-rss-feed.xml', 'NCSC'],
-    ['https://www.cisecurity.org/feed/advisories', 'Center of Internet Security']
+    ["https://www.cisa.gov/uscert/ncas/alerts.xml", "US-CERT CISA"],
+    ["https://www.ncsc.gov.uk/api/1/services/v1/report-rss-feed.xml", "NCSC"],
+    ["https://www.cisecurity.org/feed/advisories", "Center of Internet Security"],
 ]
+
+FeedTypes = Enum("FeedTypes", "RSS JSON")
+
+source_details = {
+    "Private RSS Feed": {
+        "source": private_rss_feed_list,
+        "hook": private_sector_feed,
+        "type": FeedTypes.RSS,
+    },
+    "Gov RSS Feed": {
+        "source": gov_rss_feed_list,
+        "hook": government_feed,
+        "type": FeedTypes.RSS,
+    },
+    "Ransomware News": {
+        "source": "https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json",
+        "hook": ransomware_feed,
+        "type": FeedTypes.JSON,
+    },
+}
+
 
 config_file = ConfigParser()
 config_file.read(configuration_file_path)
 
 
-def get_ransomware_updates():
-    r = requests.get('https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json')
+def get_ransomware_news(source):
+    posts = requests.get(source).json()
 
-    for entries in r.json():
-        date_activity = entries['discovered']
+    for post in posts:
+        post["publish_date"] = post["discovered"]
+        post["title"] = "Post: " + post["post_title"]
+        post["source"] = post["group_name"]
 
-        try:
-            config_entry = config_file.get('main', entries['group_name'])
-        except NoOptionError: # automatically add newly discovered groups to config
-            config_file.set('main', entries["group_name"], " = ?")
-            config_entry = config_file.get('main', entries["group_name"])
-
-        if config_entry.endswith('?'):
-            config_file.set('main', entries['group_name'], date_activity)
-
-        if(config_entry >= date_activity): # TODO this works but is probably not the best way to handle datetimes
-            continue
-        else:
-            config_file.set('main', entries['group_name'], entries['discovered'])
-        
-        message = f'{entries["group_name"]}\n{entries["discovered"]}\n{entries["post_title"]}'
-        ransomware_feed.send(message)
-        time.sleep(3)
-
-        config_file.set('main', entries['group_name'], entries['discovered'])
-
-    with open(configuration_file_path, 'w') as f:
-        config_file.write(f)
+    return posts
 
 
-def get_rss_from_url(rss_item, hook_channel_descriptor):
+def get_news_from_rss(rss_item):
     feed_entries = feedparser.parse(rss_item[0]).entries
-    messages = []
 
     # This is needed to ensure that the oldest articles are proccessed first. See https://github.com/vxunderground/ThreatIntelligenceDiscordBot/issues/9 for reference
     for rss_object in feed_entries:
+        rss_object["source"] = rss_item[1]
         try:
-            rss_object["publish_date"] = time.strftime('%Y-%m-%dT%H:%M:%S', rss_object.published_parsed)
+            rss_object["publish_date"] = time.strftime(
+                "%Y-%m-%dT%H:%M:%S", rss_object.published_parsed
+            )
         except:
-            rss_object["publish_date"] = time.strftime('%Y-%m-%dT%H:%M:%S', rss_object.updated_parsed)
+            rss_object["publish_date"] = time.strftime(
+                "%Y-%m-%dT%H:%M:%S", rss_object.updated_parsed
+            )
 
-    feed_entries.sort(key=lambda rss_object:rss_object["publish_date"])
+    return feed_entries
+
+
+def proccess_articles(articles):
+    messages = []
+    articles.sort(key=lambda article: article["publish_date"])
 
     # Only take the latest 10, as this is more than enough given the half an hour interval the script is run at, and discord can't send more than 10 embedded messages at once
-    for rss_object in feed_entries[-10:]:
+    for article in articles:
         try:
-            config_entry = config_file.get('main', rss_item[1])
-        except NoOptionError: # automatically add newly discovered groups to config
-            config_file.set('main', rss_item[1], " = ?")
-            config_entry = config_file.get('main', rss_item[1])   
+            config_entry = config_file.get("main", article["source"])
+        except NoOptionError:  # automatically add newly discovered groups to config
+            config_file.set("main", article["source"], " = ?")
+            config_entry = config_file.get("main", article["source"])
 
-        if config_entry.endswith('?'):
-            config_file.set('main', rss_item[1], rss_object["publish_date"])
+        if config_entry.endswith("?"):
+            config_file.set("main", article["source"], article["publish_date"])
         else:
-            if(config_entry >= rss_object["publish_date"]):
+            if config_entry >= article["publish_date"]:
                 continue
             else:
-                config_file.set('main', rss_item[1], rss_object["publish_date"])
+                config_file.set("main", article["source"], article["publish_date"])
 
-        messages.append(format_single_article(rss_item[1], rss_object))
+        messages.append(format_single_article(article))
 
-    if messages:
-        if hook_channel_descriptor == 1:
-            private_sector_feed.send(embeds=messages)
-        elif hook_channel_descriptor == 2:
-            government_feed.send(embeds=messages)
-        else:
-            pass
-
-
-    with open(configuration_file_path, 'w') as f:
+    with open(configuration_file_path, "w") as f:
         config_file.write(f)
 
-
-def write_status_messages_to_discord(rss_item):
-    status_messages.send(f'[*]{time.ctime()} checked {rss_item}')
-    time.sleep(2) 
+    return messages
 
 
-if __name__ == '__main__':
-    while(True):
-        for rss_item in rss_feed_list:
-            get_rss_from_url(rss_item, 1)
-            write_status_messages_to_discord(rss_item[1])
-            time.sleep(3) # To avoid rate limiting
+def send_messages(hook, messages, batch_size=10):
+    for i in range(0, len(messages), batch_size):
+        hook.send(embeds=messages[i : i + batch_size])
+        time.sleep(3)
 
-        for rss_item in gov_rss_feed_list:
-            get_rss_from_url(rss_item, 2)
-            write_status_messages_to_discord(rss_item[1])
-            time.sleep(3) # To avoid rate limiting
 
-        get_ransomware_updates()
-        write_status_messages_to_discord('Ransomware TA List')
+def process_source(post_gathering_func, source, hook):
+    raw_articles = post_gathering_func(source)
+    processed_articles = proccess_articles(raw_articles)
+    send_messages(hook, processed_articles)
+
+
+def handle_rss_feed_list(rss_feed_list, hook):
+    for rss_feed in rss_feed_list:
+        status_messages.send(f"> {rss_feed[1]}")
+        process_source(get_news_from_rss, rss_feed, hook)
+
+
+def write_status_messages_to_discord(message):
+    status_messages.send(f"**{time.ctime()}**: *{message}*")
+    time.sleep(3)
+
+
+if __name__ == "__main__":
+    while True:
+
+        for detail_name, details in source_details.items():
+            write_status_messages_to_discord(f"Checking {detail_name}")
+
+            if details["type"] == FeedTypes.JSON:
+                process_source(get_ransomware_news, details["source"], details["hook"])
+            elif details["type"] == FeedTypes.RSS:
+                handle_rss_feed_list(details["source"], details["hook"])
+
+        write_status_messages_to_discord("All done")
 
         time.sleep(1800)
