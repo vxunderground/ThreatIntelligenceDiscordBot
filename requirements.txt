@@ -21,3 +21,4 @@ Telethon==1.24.0
 typing-extensions==4.3.0
 urllib3==1.26.11
 yarl==1.8.1
+python-dateutil==2.8.2
