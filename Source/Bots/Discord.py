@@ -12,11 +12,11 @@ import feedparser
 from configparser import ConfigParser, NoOptionError
 from discord import Webhook, RequestsWebhookAdapter
 
-from Formatting import format_single_article
+from ..Formatting import format_single_article
 
 # expects the configuration file in the same directory as this script by default, replace if desired otherwise
 configuration_file_path = os.path.join(
-    os.path.split(os.path.abspath(__file__))[0], "Config.txt"
+    os.getcwd(), "Source", "RSSLog.txt"
 )
 
 # put the discord hook urls to the channels you want to receive feeds in here
@@ -168,7 +168,6 @@ def write_status_messages_to_discord(message):
     time.sleep(3)
 
 
-@atexit.register
 def clean_up_and_close():
     with open(configuration_file_path, "w") as f:
         config_file.write(f)
@@ -194,5 +193,6 @@ def main():
 
 
 if __name__ == "__main__":
+    atexit.register(clean_up_and_close)
     signal.signal(signal.SIGTERM, lambda num, frame: clean_up_and_close())
     main()

@@ -6,7 +6,9 @@ from telethon.errors.rpcerrorlist import UsernameInvalidError
 from telethon.tl.functions.channels import JoinChannelRequest
 
 # downloads to the TelegramImages directory by default, replace if desired otherwise
-image_download_path = os.path.join(os.path.split(os.path.abspath(__file__))[0], '..', 'TelegramImages')
+image_download_path = os.path.join(
+    os.getcwd(), "Source", "TelegramImages"
+)
 
 # put your telegram api stuff in here
 telegram_client = TelegramClient('Bot Name', 'API ID', 'API HASH')
