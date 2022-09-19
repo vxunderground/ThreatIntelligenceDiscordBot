@@ -2,27 +2,25 @@ from configparser import ConfigParser, NoOptionError
 from discord import Webhook, RequestsWebhookAdapter
 from telethon import TelegramClient
 
+from .Utils import verify_config_section
+
 config = ConfigParser()
 config.optionxform = str  # Preserve case when reading config file
 config.read("config.ini")
 
-webhooks = None
-telegram_client = None
+for section in ["Webhooks", "Telegram"]:
+    if not section in config:
+        sys.exit(f'Please specify a "{section}" section in the config file')
 
+    vars()[section.lower()] = None
 
-def verify_config_section(section_name):
-    return section_name in config and all(
-        [detail for detail_name, detail in config.items(section_name)]
-    )
-
-
-if verify_config_section("Webhooks"):
+if verify_config_section(config, "Webhooks"):
     webhooks = {
         hook_name: Webhook.from_url(hook_url, adapter=RequestsWebhookAdapter())
         for hook_name, hook_url in config.items("Webhooks")
     }
 
-if verify_config_section("Telegram"):
+if verify_config_section(config, "Telegram"):
     telegram_client = TelegramClient(
         config["Telegram"]["BotName"],
         config["Telegram"]["APIID"],
