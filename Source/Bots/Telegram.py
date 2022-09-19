@@ -1,21 +1,20 @@
 import os
 import time
-from discord import Webhook, RequestsWebhookAdapter, File
-from telethon import TelegramClient, events, sync
+from discord import File
+
+from telethon import events
 from telethon.errors.rpcerrorlist import UsernameInvalidError
 from telethon.tl.functions.channels import JoinChannelRequest
 
-# downloads to the TelegramImages directory by default, replace if desired otherwise
+from .. import webhooks, config, telegram_client
+
 image_download_path = os.path.join(
-    os.getcwd(), "Source", "TelegramImages"
+    os.getcwd(),
+    "Source",
+    config.get(
+        "Telegram", "ImageDownloadFolder", raw=True, vars={"fallback": "TelegramImages"}
+    ),
 )
-
-# put your telegram api stuff in here
-telegram_client = TelegramClient('Bot Name', 'API ID', 'API HASH')
-telegram_client.start()
-
-# put the discord hook url to the channel you want to receive feeds in here
-telegram_feed = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
 
 telegram_feed_list = {
     'ArvinGroup': 'https://t.me/arvin_club',
@@ -54,22 +53,12 @@ telegram_feed_list = {
 }
 
 
-# Instatiate object per feed item
-for feed in telegram_feed_list:
-    try: # TODO consider only sending join requests if not already joined
-        vars()[feed] = telegram_client.get_entity(telegram_feed_list[feed])
-        telegram_client(JoinChannelRequest(vars()['feed']))
-    except (UsernameInvalidError, TypeError, ValueError): # telegram user or channel was not found
-        continue
-
-
-@telegram_client.on(events.NewMessage(incoming=True))
 async def event_handler(event):
     if event.photo:
         image_data = await event.download_media(image_download_path)
-        upload_file = File(open(image_data, 'rb'))
-        telegram_feed.send(file=upload_file)
-        
+        upload_file = File(open(image_data, "rb"))
+        webhooks["TelegramFeed"].send(file=upload_file)
+
     for channel in telegram_feed_list:
         # TODO consider error handling here and write to a secondary discord status channel on errors
         try:
@@ -81,8 +70,31 @@ async def event_handler(event):
 
 
 def create_telegram_output(group, message):
-    telegram_feed.send(f'{group} {time.ctime()} {message}')
-    
+    webhooks["TelegramFeed"].send(f"{group} {time.ctime()} {message}")
 
-if __name__ == '__main__':
+
+# Instatiate object per feed item
+def init():
+    telegram_client.start()
+
+    for feed in telegram_feed_list:
+        try:  # TODO consider only sending join requests if not already joined
+            vars()[feed] = telegram_client.get_entity(telegram_feed_list[feed])
+            telegram_client(JoinChannelRequest(vars()["feed"]))
+        except (
+            UsernameInvalidError,
+            TypeError,
+            ValueError,
+        ):  # telegram user or channel was not found
+            continue
+
+    telegram_client.add_event_handler(event_handler, events.NewMessage(incoming=True))
+
+
+def main():
+    init()
     telegram_client.run_until_disconnected()
+
+
+if __name__ == "__main__":
+    main()
