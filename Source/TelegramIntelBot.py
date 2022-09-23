@@ -54,9 +54,8 @@ telegram_feed_list = {
 
 # Instatiate object per feed item
 for feed in telegram_feed_list:
-    vars()[feed] = telegram_client.get_entity(telegram_feed_list[feed])
-
     try: # TODO consider only sending join requests if not already joined
+        vars()[feed] = telegram_client.get_entity(telegram_feed_list[feed])
         telegram_client(JoinChannelRequest(vars()['feed']))
     except (UsernameInvalidError, TypeError, ValueError): # telegram user or channel was not found
         continue
@@ -71,9 +70,12 @@ async def event_handler(event):
         
     for channel in telegram_feed_list:
         # TODO consider error handling here and write to a secondary discord status channel on errors
-        if globals()[channel].id == event.message.peer_id.channel_id:
-            create_telegram_output(globals()[channel].title, event.message.message)
-            break
+        try:
+            if globals()[channel].id == event.message.peer_id.channel_id:
+                create_telegram_output(globals()[channel].title, event.message.message)
+                break
+        except:
+            continue
 
 
 def create_telegram_output(group, message):
