@@ -66,14 +66,7 @@ async def event_handler(event):
         with open(image_data, "rb") as upload_file:
             webhooks["TelegramFeed"].send(file=File(upload_file))
 
-    for feed in telegram_feed_list.keys():
-        # TODO consider error handling here and write to a secondary discord status channel on errors
-        try:
-            if telegram_feed_list[feed]["channel"].id == event.message.peer_id.channel_id:
-                create_telegram_output(telegram_feed_list[feed]["channel"].title, event.message.message)
-                break
-        except Exception as e:
-            logger.error("Error when attempting to locate channel for message", exc_info=e)
+    create_telegram_output(event.chat.title, event.message.message)
 
 
 def create_telegram_output(group, message):
