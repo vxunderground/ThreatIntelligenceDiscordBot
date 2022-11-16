@@ -2,11 +2,11 @@ import os
 import time
 from discord import File
 
-from telethon import events
+from telethon.sync import events, TelegramClient
 from telethon.errors.rpcerrorlist import UsernameInvalidError
 from telethon.tl.functions.channels import JoinChannelRequest
 
-from .. import webhooks, config, telegram_client
+from .. import webhooks, config
 
 image_download_path = os.path.join(
     os.getcwd(),
@@ -77,9 +77,7 @@ def create_telegram_output(group, message):
 
 
 # Instatiate object per feed item
-def init():
-    telegram_client.start()
-
+def init_client(client):
     for feed in telegram_feed_list.keys():
         try:  # TODO consider only sending join requests if not already joined
             telegram_feed_list[feed]["channel"] = client.get_entity(telegram_feed_list[feed])
@@ -91,12 +89,17 @@ def init():
         ):  # telegram user or channel was not found
             continue
 
-    telegram_client.add_event_handler(event_handler, events.NewMessage(incoming=True))
+    client.add_event_handler(event_handler, events.NewMessage(incoming=True))
 
 
 def main():
-    init()
-    telegram_client.run_until_disconnected()
+    with TelegramClient(
+        config["Telegram"]["BotName"],
+        config["Telegram"]["APIID"],
+        config["Telegram"]["APIHash"],
+    ) as client:
+        init_client(client)
+        client.run_until_disconnected()
 
 
 if __name__ == "__main__":
