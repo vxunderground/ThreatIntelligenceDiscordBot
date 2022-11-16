@@ -3,6 +3,14 @@ from discord import Webhook, RequestsWebhookAdapter
 
 from .Utils import verify_config_section
 
+from os import mkdir
+
+# Need to create folder before running script, as the logger will otherwise throw error
+try:
+    mkdir("logs")
+except OSError:
+    pass # Most likely simply means the folder already exists
+
 config = ConfigParser()
 config.optionxform = str  # Preserve case when reading config file
 config.read("config.ini")

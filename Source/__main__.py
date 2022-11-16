@@ -1,7 +1,7 @@
 import sys
 
 from . import config
-from .Utils import get_missing_config_params
+from .Utils import get_missing_config_params, configure_logger
 
 
 def verify_config(section_name):
@@ -16,7 +16,8 @@ def verify_config(section_name):
 if __name__ == "__main__":
     verify_config("Webhooks")
     if len(sys.argv) > 1:
-        match sys.argv[1].lower():
+        command: str = sys.argv[1].lower()
+        match command:
             case "rss":
                 from .Bots import RSS as bot
             case "telegram":
@@ -26,7 +27,7 @@ if __name__ == "__main__":
                 sys.exit(
                     "Argument not recognized. The possible options are rss and telegram"
                 )
-
+        configure_logger(command)
         bot.main()
     else:
         sys.exit(
