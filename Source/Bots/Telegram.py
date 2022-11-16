@@ -85,7 +85,7 @@ def init_client(client):
     for feed in telegram_feed_list.keys():
         try:  # TODO consider only sending join requests if not already joined
             logger.debug(f'Joining "{feed}" channel at {telegram_feed_list[feed]["url"]}')
-            telegram_feed_list[feed]["channel"] = client.get_entity(telegram_feed_list[feed])
+            telegram_feed_list[feed]["channel"] = client.get_entity(telegram_feed_list[feed]["url"])
             client(JoinChannelRequest(telegram_feed_list[feed]["channel"]))
         except (
             UsernameInvalidError,
