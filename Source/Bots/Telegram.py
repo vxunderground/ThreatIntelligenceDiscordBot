@@ -103,6 +103,7 @@ def main():
         config["Telegram"]["APIID"],
         config["Telegram"]["APIHash"],
     ) as client:
+        logger.info("Initiating telegram client")
         init_client(client)
         client.run_until_disconnected()
 
