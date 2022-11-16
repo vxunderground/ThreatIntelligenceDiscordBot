@@ -10,7 +10,6 @@ from .. import webhooks, config
 
 image_download_path = os.path.join(
     os.getcwd(),
-    "Source",
     config.get(
         "Telegram", "ImageDownloadFolder", raw=True, vars={"fallback": "TelegramImages"}
     ),
@@ -58,9 +57,10 @@ for name, url in telegram_feed_list.items():
 
 async def event_handler(event):
     if event.photo:
-        image_data = await event.download_media(image_download_path)
-        upload_file = File(open(image_data, "rb"))
-        webhooks["TelegramFeed"].send(file=upload_file)
+
+        image_data = await event.download_media(os.path.join(image_download_path, str(event.photo.id)))
+        with open(image_data, "rb") as upload_file:
+            webhooks["TelegramFeed"].send(file=File(upload_file))
 
     for feed in telegram_feed_list.keys():
         # TODO consider error handling here and write to a secondary discord status channel on errors
