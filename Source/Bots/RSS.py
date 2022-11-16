@@ -8,6 +8,9 @@ import signal
 import sys
 import atexit
 
+import logging
+logger = logging.getLogger("rss")
+
 import feedparser
 from configparser import ConfigParser, NoOptionError
 
@@ -81,6 +84,7 @@ rss_log.read(rss_log_file_path)
 
 
 def get_ransomware_news(source):
+    logger.debug("Querying latest ransomware information")
     posts = requests.get(source).json()
 
     for post in posts:
@@ -92,6 +96,7 @@ def get_ransomware_news(source):
 
 
 def get_news_from_rss(rss_item):
+    logger.debug(f"Querying RSS feed at {rss_item[0]}")
     feed_entries = feedparser.parse(rss_item[0]).entries
 
     # This is needed to ensure that the oldest articles are proccessed first. See https://github.com/vxunderground/ThreatIntelligenceDiscordBot/issues/9 for reference
@@ -133,6 +138,7 @@ def proccess_articles(articles):
 
 
 def send_messages(hook, messages, articles, batch_size=10):
+    logger.debug(f"Sending {len(messages)} messages in batches of {batch_size}")
     for i in range(0, len(messages), batch_size):
         hook.send(embeds=messages[i : i + batch_size])
 
@@ -151,16 +157,19 @@ def process_source(post_gathering_func, source, hook):
 
 def handle_rss_feed_list(rss_feed_list, hook):
     for rss_feed in rss_feed_list:
+        logger.info(f"Handling RSS feed for {rss_feed[1]}")
         webhooks["StatusMessages"].send(f"> {rss_feed[1]}")
+
         process_source(get_news_from_rss, rss_feed, hook)
 
 
-def write_status_messages_to_discord(message):
+def write_status_message(message):
     webhooks["StatusMessages"].send(f"**{time.ctime()}**: *{message}*")
-    time.sleep(3)
+    logger.info(message)
 
 
 def clean_up_and_close():
+    logger.critical("Writing last things to rss log file and closing up")
     with open(rss_log_file_path, "w") as f:
         rss_log.write(f)
 
@@ -168,21 +177,26 @@ def clean_up_and_close():
 
 
 def main():
+    logger.debug("Registering clean-up handlers")
     atexit.register(clean_up_and_close)
     signal.signal(signal.SIGTERM, lambda num, frame: clean_up_and_close())
 
     while True:
         for detail_name, details in source_details.items():
-            write_status_messages_to_discord(f"Checking {detail_name}")
+            write_status_message(f"Checking {detail_name}")
 
             if details["type"] == FeedTypes.JSON:
                 process_source(get_ransomware_news, details["source"], details["hook"])
             elif details["type"] == FeedTypes.RSS:
                 handle_rss_feed_list(details["source"], details["hook"])
 
-        write_status_messages_to_discord("All done")
+            time.sleep(3)
+
+        logger.debug("Writing new time to rss log file")
         with open(rss_log_file_path, "w") as f:
             rss_log.write(f)
+
+        write_status_message("All done, going to sleep")
 
         time.sleep(1800)
 

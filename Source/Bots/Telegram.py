@@ -6,6 +6,9 @@ from telethon.sync import events, TelegramClient
 from telethon.errors.rpcerrorlist import UsernameInvalidError
 from telethon.tl.functions.channels import JoinChannelRequest
 
+import logging
+logger = logging.getLogger("telegram")
+
 from .. import webhooks, config
 
 image_download_path = os.path.join(
@@ -57,6 +60,7 @@ for name, url in telegram_feed_list.items():
 
 async def event_handler(event):
     if event.photo:
+        logger.debug("Downloading image...")
 
         image_data = await event.download_media(os.path.join(image_download_path, str(event.photo.id)))
         with open(image_data, "rb") as upload_file:
@@ -68,8 +72,8 @@ async def event_handler(event):
             if telegram_feed_list[feed]["channel"].id == event.message.peer_id.channel_id:
                 create_telegram_output(telegram_feed_list[feed]["channel"].title, event.message.message)
                 break
-        except:
-            continue
+        except Exception as e:
+            logger.error("Error when attempting to locate channel for message", exc_info=e)
 
 
 def create_telegram_output(group, message):
@@ -80,15 +84,16 @@ def create_telegram_output(group, message):
 def init_client(client):
     for feed in telegram_feed_list.keys():
         try:  # TODO consider only sending join requests if not already joined
+            logger.debug(f'Joining "{feed}" channel at {telegram_feed_list[feed]["url"]}')
             telegram_feed_list[feed]["channel"] = client.get_entity(telegram_feed_list[feed])
             client(JoinChannelRequest(telegram_feed_list[feed]["channel"]))
         except (
             UsernameInvalidError,
-            TypeError,
-            ValueError,
-        ):  # telegram user or channel was not found
+        ) as e:  # telegram user or channel was not found
+            logger.warning(f'Problem when attempting to join "{feed}" channel at {telegram_feed_list[feed]["url"]}', exc_info=e)
             continue
 
+    logger.debug("Registering event handler for handling new messages")
     client.add_event_handler(event_handler, events.NewMessage(incoming=True))
 
 
