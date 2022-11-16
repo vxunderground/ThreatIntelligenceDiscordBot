@@ -12,8 +12,6 @@ for section in ["Webhooks", "Telegram"]:
     if not section in config:
         sys.exit(f'Please specify a "{section}" section in the config file')
 
-    vars()[section.lower()] = None
-
 if verify_config_section(config, "Webhooks"):
     webhooks = {
         hook_name: Webhook.from_url(hook_url, adapter=RequestsWebhookAdapter())

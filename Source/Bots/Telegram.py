@@ -52,6 +52,9 @@ telegram_feed_list = {
     'HeawsNet': 'https://t.me/heawsnet'
 }
 
+for name, url in telegram_feed_list.items():
+    telegram_feed_list[name] = {"url" : url, "channel" : None}
+
 
 async def event_handler(event):
     if event.photo:
@@ -59,11 +62,11 @@ async def event_handler(event):
         upload_file = File(open(image_data, "rb"))
         webhooks["TelegramFeed"].send(file=upload_file)
 
-    for channel in telegram_feed_list:
+    for feed in telegram_feed_list.keys():
         # TODO consider error handling here and write to a secondary discord status channel on errors
         try:
-            if globals()[channel].id == event.message.peer_id.channel_id:
-                create_telegram_output(globals()[channel].title, event.message.message)
+            if telegram_feed_list[feed]["channel"].id == event.message.peer_id.channel_id:
+                create_telegram_output(telegram_feed_list[feed]["channel"].title, event.message.message)
                 break
         except:
             continue
@@ -77,10 +80,10 @@ def create_telegram_output(group, message):
 def init():
     telegram_client.start()
 
-    for feed in telegram_feed_list:
+    for feed in telegram_feed_list.keys():
         try:  # TODO consider only sending join requests if not already joined
-            vars()[feed] = telegram_client.get_entity(telegram_feed_list[feed])
-            telegram_client(JoinChannelRequest(vars()["feed"]))
+            telegram_feed_list[feed]["channel"] = client.get_entity(telegram_feed_list[feed])
+            client(JoinChannelRequest(telegram_feed_list[feed]["channel"]))
         except (
             UsernameInvalidError,
             TypeError,
