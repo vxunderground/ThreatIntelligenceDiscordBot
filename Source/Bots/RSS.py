@@ -72,7 +72,7 @@ source_details = {
 rss_log_file_path = os.path.join(
     os.getcwd(),
     "Source",
-    config.get("Discord", "RSSLogFile", raw=True, vars={"fallback": "RSSLog.txt"}),
+    config.get("RSS", "RSSLogFile", raw=True, vars={"fallback": "RSSLog.txt"}),
 )
 
 

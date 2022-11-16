@@ -7,15 +7,15 @@ The vx-underground Threat Intelligence Discord Bot gets updates from various cle
 * Requires Discord Webhook
 * Easily add or remove domains wanting to be monitored
 * 2 Scripts are present in the /Source/ directory
-    - DiscordIntelBot.py: responsible for ransomware groups and clearnet domains
-    - TelegramIntelBot.py: responsible for handling Telegram channels
+    - RSS.py: responsible for ransomware groups and clearnet domains
+    - Telegram.py: responsible for handling Telegram channels
 
 # Getting Started
 * Step 1. Make a web hook. Not sure how to make a webhook? [Discord makes it easy!](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
 * Step 2. Update the config.ini file. This should be filled out with the webhooks you created in the previous step, and in case you'd like to monitor Telegram channels, also some [Telegram API details](https://core.telegram.org/api/obtaining_api_id)
 * Step 3. Have internet connection
     - If you're running the Telegram channel monitor, please note it downloads images from the Telegram channel. Sufficient hard disk space will be required to store images. By default downloaded images are stored in the TelegramImages subfolder. Change the ImageDownloadFolder property in the config.ini file if you'd like to store them somewhere else.
-* Step 4. Run the scripts. This is done using the following command, with bot_type have the value of either "telegram" or "discord", depending on what bot you want to run:
+* Step 4. Run the scripts. This is done using the following command, with bot_type have the value of either "telegram" or "rss", depending on what bot you want to run:
 ```
 python -m Source [bot_type]
 ```

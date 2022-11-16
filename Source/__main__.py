@@ -17,18 +17,18 @@ if __name__ == "__main__":
     verify_config("Webhooks")
     if len(sys.argv) > 1:
         match sys.argv[1].lower():
-            case "discord":
-                from .Bots import Discord as bot
+            case "rss":
+                from .Bots import RSS as bot
             case "telegram":
                 verify_config("Telegram")
                 from .Bots import Telegram as bot
             case _:
                 sys.exit(
-                    "Argument not recognized. The possible options are discord and telegram"
+                    "Argument not recognized. The possible options are rss and telegram"
                 )
 
         bot.main()
     else:
         sys.exit(
-            "Please provide an argument for what bot should be run. The possible options are discord and telegram"
+            "Please provide an argument for what bot should be run. The possible options are rss and telegram"
         )
