@@ -60,7 +60,8 @@ def format_single_article(article):
         )
 
     else:
-        message.set_thumbnail(url=THUMBNAIL_URL)
+        if article["title"]:
+            message.set_thumbnail(url=THUMBNAIL_URL)
 
         message.add_field(
             name=source_text,

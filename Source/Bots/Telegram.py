@@ -10,6 +10,7 @@ import logging
 logger = logging.getLogger("telegram")
 
 from .. import webhooks, config
+from ..Formatting import format_single_article
 
 image_download_path = os.path.join(
     os.getcwd(),
@@ -66,11 +67,12 @@ async def event_handler(event):
         with open(image_data, "rb") as upload_file:
             webhooks["TelegramFeed"].send(file=File(upload_file))
 
-    create_telegram_output(event.chat.title, event.message.message)
+    create_telegram_output(event.chat, event.message)
 
 
-def create_telegram_output(group, message):
-    webhooks["TelegramFeed"].send(f"{group} {time.ctime()} {message}")
+def create_telegram_output(chat, message):
+    message = format_single_article({"title" : message.message, "source" : f"{chat.title} | Telegram", "publish_date" : message.date})
+    webhooks["TelegramFeed"].send(embed=message)
 
 
 # Instatiate object per feed item
