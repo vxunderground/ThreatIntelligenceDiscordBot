@@ -8,23 +8,14 @@ import signal
 import sys
 import atexit
 
+import logging
+logger = logging.getLogger("rss")
+
 import feedparser
 from configparser import ConfigParser, NoOptionError
-from discord import Webhook, RequestsWebhookAdapter
 
-from Formatting import format_single_article
-
-# expects the configuration file in the same directory as this script by default, replace if desired otherwise
-configuration_file_path = os.path.join(
-    os.path.split(os.path.abspath(__file__))[0], "Config.txt"
-)
-
-# put the discord hook urls to the channels you want to receive feeds in here
-private_sector_feed = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
-government_feed = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
-ransomware_feed = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
-# this one is logging of moniotring status only
-status_messages = Webhook.from_url('https://discord.com/api/webhooks/000/000', adapter=RequestsWebhookAdapter())
+from .. import webhooks, config
+from ..Formatting import format_single_article
 
 private_rss_feed_list = [
     ['https://grahamcluley.com/feed/', 'Graham Cluley'],
@@ -66,27 +57,34 @@ FeedTypes = Enum("FeedTypes", "RSS JSON")
 source_details = {
     "Private RSS Feed": {
         "source": private_rss_feed_list,
-        "hook": private_sector_feed,
+        "hook": webhooks["PrivateSectorFeed"],
         "type": FeedTypes.RSS,
     },
     "Gov RSS Feed": {
         "source": gov_rss_feed_list,
-        "hook": government_feed,
+        "hook": webhooks["GovermentFeed"],
         "type": FeedTypes.RSS,
     },
     "Ransomware News": {
         "source": "https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json",
-        "hook": ransomware_feed,
+        "hook": webhooks["RansomwareFeed"],
         "type": FeedTypes.JSON,
     },
 }
 
+rss_log_file_path = os.path.join(
+    os.getcwd(),
+    "Source",
+    config.get("RSS", "RSSLogFile", raw=True, vars={"fallback": "RSSLog.txt"}),
+)
 
-config_file = ConfigParser()
-config_file.read(configuration_file_path)
+
+rss_log = ConfigParser()
+rss_log.read(rss_log_file_path)
 
 
 def get_ransomware_news(source):
+    logger.debug("Querying latest ransomware information")
     posts = requests.get(source).json()
 
     for post in posts:
@@ -98,6 +96,7 @@ def get_ransomware_news(source):
 
 
 def get_news_from_rss(rss_item):
+    logger.debug(f"Querying RSS feed at {rss_item[0]}")
     feed_entries = feedparser.parse(rss_item[0]).entries
 
     # This is needed to ensure that the oldest articles are proccessed first. See https://github.com/vxunderground/ThreatIntelligenceDiscordBot/issues/9 for reference
@@ -121,13 +120,13 @@ def proccess_articles(articles):
 
     for article in articles:
         try:
-            config_entry = config_file.get("main", article["source"])
+            config_entry = rss_log.get("main", article["source"])
         except NoOptionError:  # automatically add newly discovered groups to config
-            config_file.set("main", article["source"], " = ?")
-            config_entry = config_file.get("main", article["source"])
+            rss_log.set("main", article["source"], " = ?")
+            config_entry = rss_log.get("main", article["source"])
 
         if config_entry.endswith("?"):
-            config_file.set("main", article["source"], article["publish_date"])
+            rss_log.set("main", article["source"], article["publish_date"])
         else:
             if config_entry >= article["publish_date"]:
                 continue
@@ -139,13 +138,12 @@ def proccess_articles(articles):
 
 
 def send_messages(hook, messages, articles, batch_size=10):
+    logger.debug(f"Sending {len(messages)} messages in batches of {batch_size}")
     for i in range(0, len(messages), batch_size):
         hook.send(embeds=messages[i : i + batch_size])
 
         for article in articles[i : i + batch_size]:
-            config_file.set(
-                "main", article["source"], article["publish_date"]
-            )
+            rss_log.set("main", article["source"], article["publish_date"])
 
         time.sleep(3)
 
@@ -159,40 +157,49 @@ def process_source(post_gathering_func, source, hook):
 
 def handle_rss_feed_list(rss_feed_list, hook):
     for rss_feed in rss_feed_list:
-        status_messages.send(f"> {rss_feed[1]}")
+        logger.info(f"Handling RSS feed for {rss_feed[1]}")
+        webhooks["StatusMessages"].send(f"> {rss_feed[1]}")
+
         process_source(get_news_from_rss, rss_feed, hook)
 
 
-def write_status_messages_to_discord(message):
-    status_messages.send(f"**{time.ctime()}**: *{message}*")
-    time.sleep(3)
+def write_status_message(message):
+    webhooks["StatusMessages"].send(f"**{time.ctime()}**: *{message}*")
+    logger.info(message)
 
 
-@atexit.register
 def clean_up_and_close():
-    with open(configuration_file_path, "w") as f:
-        config_file.write(f)
+    logger.critical("Writing last things to rss log file and closing up")
+    with open(rss_log_file_path, "w") as f:
+        rss_log.write(f)
 
     sys.exit(0)
 
 
 def main():
+    logger.debug("Registering clean-up handlers")
+    atexit.register(clean_up_and_close)
+    signal.signal(signal.SIGTERM, lambda num, frame: clean_up_and_close())
+
     while True:
         for detail_name, details in source_details.items():
-            write_status_messages_to_discord(f"Checking {detail_name}")
+            write_status_message(f"Checking {detail_name}")
 
             if details["type"] == FeedTypes.JSON:
                 process_source(get_ransomware_news, details["source"], details["hook"])
             elif details["type"] == FeedTypes.RSS:
                 handle_rss_feed_list(details["source"], details["hook"])
 
-        write_status_messages_to_discord("All done")
-        with open(configuration_file_path, "w") as f:
-            config_file.write(f)
+            time.sleep(3)
+
+        logger.debug("Writing new time to rss log file")
+        with open(rss_log_file_path, "w") as f:
+            rss_log.write(f)
+
+        write_status_message("All done, going to sleep")
 
         time.sleep(1800)
 
 
 if __name__ == "__main__":
-    signal.signal(signal.SIGTERM, lambda num, frame: clean_up_and_close())
     main()
