@@ -9,6 +9,7 @@ import sys
 import atexit
 
 import logging
+
 logger = logging.getLogger("rss")
 
 import feedparser
@@ -16,6 +17,12 @@ from configparser import ConfigParser, NoOptionError
 
 from .. import webhooks, config
 from ..Formatting import format_single_article
+
+from datetime import datetime
+
+START_DATETIME = datetime(2024, 1, 27)  # articles before this datetime are not posted
+DATETIME_FORMAT_RANSOMWARE = "%Y-%m-%d %H:%M:%S.%f"  # assumed datetime format of all articles
+DATETIME_FORMAT_NEWS = "%Y-%m-%dT%H:%M:%S"
 
 private_rss_feed_list = [
     ['https://grahamcluley.com/feed/', 'Graham Cluley'],
@@ -57,18 +64,18 @@ FeedTypes = Enum("FeedTypes", "RSS JSON")
 source_details = {
     "Private RSS Feed": {
         "source": private_rss_feed_list,
-        "hook": webhooks["PrivateSectorFeed"],
-        "type": FeedTypes.RSS,
+        "hook"  : webhooks["PrivateSectorFeed"],
+        "type"  : FeedTypes.RSS,
     },
-    "Gov RSS Feed": {
+    "Gov RSS Feed"    : {
         "source": gov_rss_feed_list,
-        "hook": webhooks["GovermentFeed"],
-        "type": FeedTypes.RSS,
+        "hook"  : webhooks["GovermentFeed"],
+        "type"  : FeedTypes.RSS,
     },
-    "Ransomware News": {
+    "Ransomware News" : {
         "source": "https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json",
-        "hook": webhooks["RansomwareFeed"],
-        "type": FeedTypes.JSON,
+        "hook"  : webhooks["RansomwareFeed"],
+        "type"  : FeedTypes.JSON,
     },
 }
 
@@ -78,7 +85,6 @@ rss_log_file_path = os.path.join(
     config.get("RSS", "RSSLogFile", raw=True, vars={"fallback": "RSSLog.txt"}),
 )
 
-
 rss_log = ConfigParser()
 rss_log.read(rss_log_file_path)
 
@@ -86,38 +92,35 @@ rss_log.read(rss_log_file_path)
 def get_ransomware_news(source):
     logger.debug("Querying latest ransomware information")
     posts = requests.get(source).json()
-
     for post in posts:
         post["publish_date"] = post["discovered"]
         post["title"] = "Post: " + post["post_title"]
         post["source"] = post["group_name"]
-
     return posts
 
 
 def get_news_from_rss(rss_item):
     logger.debug(f"Querying RSS feed at {rss_item[0]}")
     feed_entries = feedparser.parse(rss_item[0]).entries
-
-    # This is needed to ensure that the oldest articles are proccessed first. See https://github.com/vxunderground/ThreatIntelligenceDiscordBot/issues/9 for reference
+    feed_entries_filtered = []
+    # This is needed to ensure that the oldest articles are proccessed first. See
+    # https://github.com/vxunderground/ThreatIntelligenceDiscordBot/issues/9 for reference
     for rss_object in feed_entries:
         rss_object["source"] = rss_item[1]
         try:
             rss_object["publish_date"] = time.strftime(
-                "%Y-%m-%dT%H:%M:%S", rss_object.published_parsed
+                DATETIME_FORMAT_NEWS, rss_object.published_parsed
             )
         except:
             rss_object["publish_date"] = time.strftime(
-                "%Y-%m-%dT%H:%M:%S", rss_object.updated_parsed
+                DATETIME_FORMAT_NEWS, rss_object.updated_parsed
             )
-
     return feed_entries
 
 
 def proccess_articles(articles):
     messages, new_articles = [], []
     articles.sort(key=lambda article: article["publish_date"])
-
     for article in articles:
         try:
             config_entry = rss_log.get("main", article["source"])
@@ -130,9 +133,13 @@ def proccess_articles(articles):
         else:
             if config_entry >= article["publish_date"]:
                 continue
-
-        messages.append(format_single_article(article))
-        new_articles.append(article)
+        try:
+            article_publish_date = datetime.strptime(article["publish_date"], DATETIME_FORMAT_RANSOMWARE)
+        except ValueError as e:
+            article_publish_date = datetime.strptime(article["publish_date"], DATETIME_FORMAT_NEWS)
+        if article_publish_date >= START_DATETIME:
+            messages.append(format_single_article(article))
+            new_articles.append(article)
 
     return messages, new_articles
 
@@ -140,9 +147,9 @@ def proccess_articles(articles):
 def send_messages(hook, messages, articles, batch_size=10):
     logger.debug(f"Sending {len(messages)} messages in batches of {batch_size}")
     for i in range(0, len(messages), batch_size):
-        hook.send(embeds=messages[i : i + batch_size])
+        hook.send(embeds=messages[i: i + batch_size])
 
-        for article in articles[i : i + batch_size]:
+        for article in articles[i: i + batch_size]:
             rss_log.set("main", article["source"], article["publish_date"])
 
         time.sleep(3)
