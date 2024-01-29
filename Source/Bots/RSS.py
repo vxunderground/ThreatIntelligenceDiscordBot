@@ -23,7 +23,7 @@ from datetime import datetime
 START_DATETIME = datetime(2024, 1, 27)  # articles before this datetime are not posted
 DATETIME_FORMAT_RANSOMWARE = "%Y-%m-%d %H:%M:%S.%f"  # assumed datetime format of all articles
 DATETIME_FORMAT_NEWS = "%Y-%m-%dT%H:%M:%S"
-VERBOSE = False
+VERBOSE_DISCORD_POSTING = False
 
 private_rss_feed_list = [
     ['https://grahamcluley.com/feed/', 'Graham Cluley'],
@@ -156,19 +156,19 @@ def send_messages(hook, messages, articles, batch_size=10):
         time.sleep(3)
 
 
-def process_source(post_gathering_func, source, hook):
+def process_source(post_gathering_func, source):
     raw_articles = post_gathering_func(source)
-
     processed_articles, new_raw_articles = proccess_articles(raw_articles)
-    send_messages(hook, processed_articles, new_raw_articles)
+    return processed_articles, new_raw_articles
 
 
 def handle_rss_feed_list(rss_feed_list, hook):
     for rss_feed in rss_feed_list:
         logger.info(f"Handling RSS feed for {rss_feed[1]}")
-        if VERBOSE:
+        processed_articles, new_raw_articles = process_source(get_news_from_rss, rss_feed)
+        if VERBOSE_DISCORD_POSTING or len(processed_articles) > 0:
             webhooks["StatusMessages"].send(f"> {rss_feed[1]}")
-        process_source(get_news_from_rss, rss_feed, hook)
+        send_messages(hook, processed_articles, new_raw_articles)
 
 
 def write_status_message(message):
@@ -191,11 +191,14 @@ def main():
 
     while True:
         for detail_name, details in source_details.items():
-            if VERBOSE:
+            if VERBOSE_DISCORD_POSTING:
                 write_status_message(f"Checking {detail_name}")
 
             if details["type"] == FeedTypes.JSON:
-                process_source(get_ransomware_news, details["source"], details["hook"])
+                processed_articles, new_raw_articles = process_source(get_ransomware_news, details["source"])
+                if VERBOSE_DISCORD_POSTING or len(processed_articles) > 0:
+                    webhooks["StatusMessages"].send(f"> Ransomware News")
+                send_messages(details["hook"], processed_articles, new_raw_articles)
             elif details["type"] == FeedTypes.RSS:
                 handle_rss_feed_list(details["source"], details["hook"])
 
@@ -205,8 +208,10 @@ def main():
         with open(rss_log_file_path, "w") as f:
             rss_log.write(f)
 
-        if VERBOSE:
+        if VERBOSE_DISCORD_POSTING:
             write_status_message("All done, going to sleep")
+        else:
+            logger.info("All done, going to sleep")
 
         time.sleep(1800)
 
