@@ -18,12 +18,20 @@ from configparser import ConfigParser, NoOptionError
 from .. import webhooks, config
 from ..Formatting import format_single_article
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
-START_DATETIME = datetime(2024, 1, 27)  # articles before this datetime are not posted
+START_DATETIME = datetime(2024, 1, 30)  # articles before this datetime are not posted
 DATETIME_FORMAT_RANSOMWARE = "%Y-%m-%d %H:%M:%S.%f"  # assumed datetime format of all articles
 DATETIME_FORMAT_NEWS = "%Y-%m-%dT%H:%M:%S"
+DATETIME_FORMAT_ISO = "%Y-%m-%dT%H:%M:%S.%f"
 VERBOSE_DISCORD_POSTING = False
+CVE_SOURCE = "NIST"
+# TODO: add CVE API queries.
+# https://nvd.nist.gov/developers/vulnerabilities
+# pubStartDate & pubEndDate are useful parameters
+# Something like:
+# https://services.nvd.nist.gov/rest/json/cves/2.0/?pubStartDate=2021-08-04T00:00:00.000&pubEndDate=2021-10-22T00:00
+# :00.000
 
 private_rss_feed_list = [
     ['https://grahamcluley.com/feed/', 'Graham Cluley'],
@@ -60,7 +68,7 @@ gov_rss_feed_list = [
     ["https://www.cisecurity.org/feed/advisories", "Center of Internet Security"],
 ]
 
-FeedTypes = Enum("FeedTypes", "RSS JSON")
+FeedTypes = Enum("FeedTypes", "RSS JSON CVEAPI")
 
 source_details = {
     "Private RSS Feed": {
@@ -77,6 +85,11 @@ source_details = {
         "source": "https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json",
         "hook"  : webhooks["RansomwareFeed"],
         "type"  : FeedTypes.JSON,
+    },
+    "CVE News"        : {
+        "source": "",  # no source because API needs start and end date time for query
+        "hook"  : webhooks["CVEFeed"],
+        "type"  : FeedTypes.CVEAPI,
     },
 }
 
@@ -100,6 +113,69 @@ def get_ransomware_news(source):
     return posts
 
 
+def get_nist_cve_between(dt_start_utc, dt_end_utc):
+    """
+    See https://nvd.nist.gov/developers/vulnerabilities on API details
+    dt_start_utc: datetime object indicating earliest date-time to query, e.g. datetime.utcnow()
+    dt_end_utc: datetime object indicating latest date-time to query
+    returns: List of dict
+    dict has keys: ['id': str, 'source': str ("NIST"), 'source_id': str, 'publish_date': str, 'vuln_status': str,
+    'description': str]
+    date_published is ISO-8601 format, example: '2024-01-28T23:15:58.350'
+    """
+    # assert isinstance(dt_start_utc, datetime.datetime)
+    # assert isinstance(dt_end_utc, datetime.datetime)
+    url_request = f"https://services.nvd.nist.gov/rest/json/cves/2.0/?pubStartDate=" \
+                  f"{dt_start_utc.isoformat()}&pubEndDate={dt_end_utc.isoformat()}"
+    logger.debug(f"Querying NIST CVE API: {url_request}")
+    response = requests.get(url_request)
+    cves = []
+    if response.status_code == 200:
+        response_json = response.json()
+        if ("vulnerabilities" not in response_json) or not isinstance(response_json["vulnerabilities"], list):
+            logger.critical(f"NIST CVE query JSON does not contain key 'vulnerabilities' or is not type of list")
+            return cves
+        for cve_dict in response_json["vulnerabilities"]:
+            cve_dict = cve_dict["cve"]
+            cve_id = cve_dict["id"]
+            cve_source_id = cve_dict["sourceIdentifier"]
+            cve_date_published = cve_dict["published"]
+            cve_vuln_status = cve_dict["vulnStatus"]
+            cve_link = "https://nvd.nist.gov/vuln/detail/" + cve_id
+            cve_description = None
+            for description in cve_dict["descriptions"]:
+                if description["lang"] == "en":
+                    cve_description = description["value"]
+                    break
+            if cve_description is None:
+                cve_description = "N/A in English"
+            cve = dict()
+            cve["id"] = cve_id
+            cve["link"] = cve_link
+            cve["source"] = CVE_SOURCE
+            cve["source_id"] = cve_source_id
+            cve[
+                "publish_date"] = cve_date_published  # change to uniformly used "publish_date" from NIST-specific
+            # "date_published" key
+            cve["vuln_status"] = cve_vuln_status
+            cve["description"] = cve_description
+            cves.append(cve)
+    else:
+        logger.critical(f"NIST query failed with status code {response.status_code}.")
+    return cves
+
+
+def get_new_nist_cve(source):
+    # TODO: this only queries from the last 7 days (~500 results in one test try). If more flexibility
+    #  required, need to implement the handling of multiple possible pages (limit: 2000 results/page). See
+    #  resultsPerPage under https://nvd.nist.gov/developers/vulnerabilities
+    # source: dummy variable, as right now only NIST is allowed as source.
+    dt_end_utc = datetime.utcnow()
+    dt_start_utc = dt_end_utc - timedelta(days=7)
+    cves = get_nist_cve_between(dt_start_utc, dt_end_utc)
+    return cves
+
+
 def get_news_from_rss(rss_item):
     logger.debug(f"Querying RSS feed at {rss_item[0]}")
     feed_entries = feedparser.parse(rss_item[0]).entries
@@ -119,7 +195,7 @@ def get_news_from_rss(rss_item):
     return feed_entries
 
 
-def proccess_articles(articles):
+def process_articles(articles):
     messages, new_articles = [], []
     articles.sort(key=lambda article: article["publish_date"])
     for article in articles:
@@ -134,10 +210,16 @@ def proccess_articles(articles):
         else:
             if config_entry >= article["publish_date"]:
                 continue
-        try:
+        # TODO: unify timedate formats!
+        # Global earliest time point filtering
+        try:  # format of ransomware feed
             article_publish_date = datetime.strptime(article["publish_date"], DATETIME_FORMAT_RANSOMWARE)
         except ValueError as e:
-            article_publish_date = datetime.strptime(article["publish_date"], DATETIME_FORMAT_NEWS)
+            try:  # format of rest of RSS
+                article_publish_date = datetime.strptime(article["publish_date"], DATETIME_FORMAT_NEWS)
+            except ValueError as e2:
+                # format of NIST API datetime strings
+                article_publish_date = datetime.strptime(article["publish_date"], DATETIME_FORMAT_ISO)
         if article_publish_date >= START_DATETIME:
             messages.append(format_single_article(article))
             new_articles.append(article)
@@ -158,7 +240,7 @@ def send_messages(hook, messages, articles, batch_size=10):
 
 def process_source(post_gathering_func, source):
     raw_articles = post_gathering_func(source)
-    processed_articles, new_raw_articles = proccess_articles(raw_articles)
+    processed_articles, new_raw_articles = process_articles(raw_articles)
     return processed_articles, new_raw_articles
 
 
@@ -193,7 +275,6 @@ def main():
         for detail_name, details in source_details.items():
             if VERBOSE_DISCORD_POSTING:
                 write_status_message(f"Checking {detail_name}")
-
             if details["type"] == FeedTypes.JSON:
                 processed_articles, new_raw_articles = process_source(get_ransomware_news, details["source"])
                 if VERBOSE_DISCORD_POSTING or len(processed_articles) > 0:
@@ -201,13 +282,16 @@ def main():
                 send_messages(details["hook"], processed_articles, new_raw_articles)
             elif details["type"] == FeedTypes.RSS:
                 handle_rss_feed_list(details["source"], details["hook"])
-
+            elif details["type"] == FeedTypes.CVEAPI:  # data is gathered using function get_new_nist_cve()
+                processed_articles, new_raw_articles = process_source(get_new_nist_cve, CVE_SOURCE)
+                if VERBOSE_DISCORD_POSTING or len(processed_articles) > 0:
+                    webhooks["StatusMessages"].send(f"> CVEs")
+                send_messages(details["hook"], processed_articles, new_raw_articles)
             time.sleep(3)
-
+        # Update RSS log
         logger.debug("Writing new time to rss log file")
         with open(rss_log_file_path, "w") as f:
             rss_log.write(f)
-
         if VERBOSE_DISCORD_POSTING:
             write_status_message("All done, going to sleep")
         else:
