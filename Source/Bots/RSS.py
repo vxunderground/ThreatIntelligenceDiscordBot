@@ -159,7 +159,8 @@ def get_nist_cve_between(dt_start_utc, dt_end_utc):
             # "date_published" key
             cve["vuln_status"] = cve_vuln_status
             cve["description"] = cve_description
-            cves.append(cve)
+            if cve["vuln_status"] != "Rejected":
+                cves.append(cve)
     else:
         logger.critical(f"NIST query failed with status code {response.status_code}.")
     return cves
