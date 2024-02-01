@@ -74,6 +74,10 @@ jobs:
         # Setting the image tag if the push is a tag push
         run: echo "IMAGE_TAG=ghcr.io/${{ github.repository }}:${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
         if: startsWith(github.ref, 'refs/tags/')
+
+        # make sure the IMAGE_TAG is lowercase
+      - name: Transform IMAGE_TAG to lowercase
+        run: echo "IMAGE_TAG=$(echo ${{ env.IMAGE_TAG }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
       - name: Build Docker image with Kaniko
         # Building the Docker image using Kaniko
         id: build_image
@@ -125,6 +129,9 @@ jobs:
         # Setting the image tag if the push is a tag push
         run: echo "IMAGE_TAG=ghcr.io/${{ github.repository }}:${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
         if: startsWith(github.ref, 'refs/tags/')
+        # make sure the IMAGE_TAG is lowercase
+      - name: Transform IMAGE_TAG to lowercase
+        run: echo "IMAGE_TAG=$(echo ${{ env.IMAGE_TAG }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
       - name: Push Docker image to GitHub image Registry
         # Pushing the Docker image to GitHub Container Registry
         run: crane push image.tar ${{ env.IMAGE_TAG }}
